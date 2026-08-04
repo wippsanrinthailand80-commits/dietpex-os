@@ -1,0 +1,78 @@
+# dietpex OS - packages to purge (remove with configuration)
+#
+# One package name (or glob pattern) per line. Lines starting with '#' are
+# ignored. Patterns such as 'libreoffice-*' are expanded by apt. Missing
+# packages are skipped silently.
+#
+# NOTE: the '--purge' flag must be passed to dietpex.sh to act on this file.
+
+# --- Snap runtime ---
+snapd
+
+# --- Games ---
+gnome-games
+aisleriot
+gnome-mines
+gnome-mahjongg
+gnome-sudoku
+quadrapassel
+swell-foop
+gnome-robots
+gnome-tetravex
+gnome-taquin
+gnome-nibbles
+gnome-klotski
+hitori
+lightsoff
+five-or-more
+four-in-a-row
+tali
+gnome-chess
+gnome-2048
+
+# --- LibreOffice suite ---
+libreoffice-*
+libreoffice
+
+# --- Mail / PIM ---
+thunderbird
+
+# --- Media players ---
+rhythmbox
+gnome-music
+gnome-videos
+totem
+brasero
+cheese
+shotwell
+simple-scan
+gnome-photos
+
+# --- Remote desktop / network tools ---
+remmina
+transmission-gtk
+transmission-common
+vinagre
+
+# --- Backup ---
+deja-dup
+deja-dup-backend
+
+# --- Web app container / bundled web apps ---
+ubuntu-web-launchers
+gnome-software-plugin-snap
+
+# --- Photo / GIMP ---
+gimp
+
+# --- Misc desktop helpers ---
+gnome-calendar
+gnome-contacts
+gnome-weather
+gnome-clocks
+gnome-maps
+gnome-todo
+gnome-disk-utility
+gnome-characters
+gnome-sound-recorder
+usb-creator-gtk

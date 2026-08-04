@@ -1,0 +1,16 @@
+# dietpex OS - protected packages (never purge even if listed elsewhere)
+#
+# One package name per line. Lines starting with '#' are ignored.
+# These are critical system components; the purge phase refuses to touch them.
+
+apt
+dpkg
+bash
+coreutils
+systemd
+systemd-sysv
+ubuntu-minimal
+ubuntu-standard
+networkd-dispatcher
+libpam-systemd
+linux-firmware
