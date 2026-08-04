@@ -25,3 +25,8 @@ coreutils
 util-linux
 curl
 ca-certificates
+
+# --- Build-time tooling that must exist inside the chroot ---
+# isohybrid (from syslinux) finalizes the ISO into a hybrid image that
+# boots from both USB and CD.
+syslinux
