@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=dietpex OS Thai demo
+Comment=Show Thai text rendering on the desktop
+Exec=xfce4-terminal --geometry=100x30 --title="dietpex OS - Thai Test" -e /usr/local/bin/dietpex-demo.sh
+X-GNOME-Autostart-enabled=true

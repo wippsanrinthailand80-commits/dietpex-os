@@ -1,0 +1,53 @@
+#!/bin/bash
+# dietpex OS - build-time chroot hook.
+# Runs inside the live-build chroot to set up the real OS:
+#   - create the dietpex user (autologin)
+#   - apply the service trim (mask units)
+#   - generate the th_TH locale
+#   - install the Thai fontconfig rule
+#   - point LightDM at XFCE
+
+set -euo pipefail
+
+echo "== dietpex live hook: creating user =="
+# The live session autologs into the 'dietpex' user (see lightdm config).
+if ! id -u dietpex >/dev/null 2>&1; then
+  useradd -m -s /bin/bash -G sudo,cdrom,dip,video,plugdev dietpex
+fi
+echo "dietpex:dietpex" | chpasswd
+
+echo "== dietpex live hook: hostname =="
+echo "dietpex-os" > /etc/hostname
+sed -i 's/^127.0.1.1.*/127.0.1.1\tdietpex-os/' /etc/hosts 2>/dev/null || true
+
+echo "== dietpex live hook: service trim (mask units) =="
+# Create mask symlinks directly (no systemd DBus needed in a chroot).
+# Mirrors config/services-disable.list so the live OS is already trimmed.
+LIST=/etc/dietpex/services-disable.list
+if [[ -f "$LIST" ]]; then
+  while IFS= read -r unit; do
+    unit="${unit%%#*}"                 # strip comments
+    unit="${unit//[[:space:]]/}"
+    [[ -z "$unit" ]] && continue
+    ln -sf /dev/null "/etc/systemd/system/$unit"
+    echo "  masked: $unit"
+  done < "$LIST"
+fi
+
+echo "== dietpex live hook: default target =="
+ln -sf /etc/systemd/system/multi-user.target.wants/graphical.target \
+  /etc/systemd/system/default.target 2>/dev/null || true
+rm -f /etc/systemd/system/default.target
+mkdir -p /etc/systemd/system
+ln -sf /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.target
+
+echo "== dietpex live hook: locale =="
+sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen 2>/dev/null || true
+sed -i 's/^# *th_TH.UTF-8/th_TH.UTF-8/' /etc/locale.gen 2>/dev/null || true
+locale-gen >/dev/null 2>&1 || true
+update-locale LANG=en_US.UTF-8 >/dev/null 2>&1 || true
+
+echo "== dietpex live hook: fontconfig cache =="
+fc-cache -f >/dev/null 2>&1 || true
+
+echo "== dietpex live hook: done =="

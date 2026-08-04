@@ -1,0 +1,5 @@
+# Built artifacts (never commit the ISO or screenshots)
+dietpex-os.iso
+tests/screenshots/
+tests/screenshots-os/
+*.iso

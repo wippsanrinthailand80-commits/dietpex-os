@@ -1,0 +1,27 @@
+# dietpex OS - live desktop package list.
+#
+# A real, bootable Ubuntu-based OS with the XFCE desktop, full Thai support
+# (fonts + fontconfig vowel fix), and the dietpex trim applied at build time.
+
+# --- Desktop environment ---
+xfce4
+xfce4-terminal
+xfce4-goodies
+lightdm
+lightdm-gtk-greeter
+network-manager
+
+# --- Thai support (fonts + vowel positioning) ---
+fonts-noto-core
+fonts-thai-tlwg
+fonts-thai-tlwg-ttf
+fonts-thai-tlwg-web
+locales
+
+# --- Base tools the live session needs ---
+sudo
+bash
+coreutils
+util-linux
+curl
+ca-certificates

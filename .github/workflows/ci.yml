@@ -14,14 +14,14 @@ jobs:
 
       - name: syntax check
         run: |
-          for f in dietpex.sh install.sh helpers/*.sh lang/*.sh tests/*.sh; do
+          for f in dietpex.sh install.sh helpers/*.sh lang/*.sh tests/*.sh build/*.sh; do
             bash -n "$f" || exit 1
           done
 
       - name: shellcheck
         run: |
           command -v shellcheck || sudo apt-get install -y shellcheck >/dev/null
-          shellcheck dietpex.sh install.sh helpers/*.sh tests/*.sh
+          shellcheck dietpex.sh install.sh helpers/*.sh tests/*.sh build/*.sh
 
       - name: unit tests
         run: bash tests/unit.sh
@@ -77,4 +77,47 @@ jobs:
           name: dietpex-screenshots
           path: tests/screenshots/*.png
           retention-days: 30
+          if-no-files-found: warn
+
+  os-image:
+    name: real OS (build ISO + VM desktop screenshots)
+    runs-on: ubuntu-24.04
+    needs: integration
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install build + VM tools
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            live-build qemu-system-x86 socat imagemagick \
+            squashfs-tools genisoimage xorriso >/dev/null
+
+      - name: build dietpex OS ISO
+        run: sudo bash build/os-image.sh
+        env:
+          OUT_ISO: ${{ github.workspace }}/dietpex-os.iso
+          WORK_DIR: /tmp/dietpex-build
+
+      - name: boot ISO in QEMU and capture desktop screenshots
+        run: sudo bash tests/os-boot-screenshot.sh \
+          /tmp/dietpex-build/live-image-amd64.hybrid.iso \
+          tests/screenshots-os
+        env:
+          WORK_DIR: /tmp/dietpex-vm
+
+      - name: upload OS desktop screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: dietpex-os-desktop
+          path: tests/screenshots-os/*.png
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: upload built ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: dietpex-os-iso
+          path: dietpex-os.iso
+          retention-days: 14
           if-no-files-found: warn

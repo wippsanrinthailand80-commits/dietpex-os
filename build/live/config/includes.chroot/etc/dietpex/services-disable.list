@@ -1,0 +1,70 @@
+# dietpex OS - services to disable (mask)
+#
+# One unit name per line. Lines starting with '#' are ignored.
+# These units are masked (symlinked to /dev/null), so they cannot be
+# started accidentally by other services or by package upgrades.
+
+# --- Snap ecosystem (auto-updates, loop mounts) ---
+snapd.service
+snapd.socket
+snapd.seeded.service
+snapd.snap-repair.service
+
+# --- Printing (CUPS) ---
+cups.service
+cups.socket
+cups.path
+cups-browsed.service
+cups-browsed.socket
+
+# --- Bluetooth / wireless peripherals ---
+bluetooth.service
+bluetooth.target
+
+# --- Telephony / WWAN modems ---
+ModemManager.service
+mm-firmware-upgrade.service
+
+# --- mDNS service discovery ---
+avahi-daemon.service
+avahi-daemon.socket
+
+# --- Error reporting / crash dumps ---
+whoopsie.service
+whoopsie.path
+apport.service
+apport-autoreport.service
+apport-forward.socket
+kerneloops.service
+kerneloops.path
+
+# --- Update / package automation daemons ---
+unattended-upgrades.service
+apt-daily.service
+apt-daily.timer
+apt-daily-upgrade.service
+apt-daily-upgrade.timer
+update-notifier-download.service
+update-notifier-download.timer
+update-notifier.service
+
+# --- Firmware update daemon ---
+fwupd.service
+fwupd-refresh.service
+fwupd-refresh.timer
+
+# --- Disk / storage daemons ---
+smartd.service
+
+# --- Misc desktop / network helpers ---
+wpa_supplicant.service
+NetworkManager-wait-online.service
+systemd-networkd-wait-online.service
+switcheroo-control.service
+bolt.service
+packagekit.service
+packagekit-offline-update.service
+power-profiles-daemon.service
+# NOTE: udisks2 is intentionally NOT masked - the file manager needs it to
+#       mount USB drives / SD cards. thermald and rtkit are also kept so
+#       laptops stay cool and audio has real-time priority.
