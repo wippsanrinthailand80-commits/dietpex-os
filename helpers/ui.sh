@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091 # sourced via dynamic path
+set -euo pipefail
 #
 # dietpex OS - UI installation helper (XFCE).
 #
@@ -11,18 +12,23 @@
 # shellcheck source=lib.sh
 source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
-XFCE_PACKAGES="xfce4 xfce4-terminal xfce4-goodies lightdm lightdm-gtk-greeter"
-GNOME_PACKAGES="ubuntu-desktop gnome-shell gdm3 gnome-session gnome-remote-desktop gnome-online-accounts"
+XFCE_PACKAGES=(xfce4 xfce4-terminal xfce4-goodies lightdm lightdm-gtk-greeter)
+GNOME_PACKAGES=(ubuntu-desktop gnome-shell gdm3 gnome-session gnome-remote-desktop gnome-online-accounts)
 
 install_xfce() {
   local purge_gnome=0
-  [[ "$1" == "--purge-gnome" ]] && purge_gnome=1
+  [[ "${1:-}" == "--purge-gnome" ]] && purge_gnome=1
 
   require_root
 
   info "$(msg installing_xfce)"
-  # shellcheck disable=SC2086
-  apt_install $XFCE_PACKAGES
+  apt_install "${XFCE_PACKAGES[@]}"
+
+  # Point LightDM at the XFCE session so a real machine boots into XFCE.
+  if command -v lightdm >/dev/null 2>&1; then
+    mkdir -p /etc/lightdm/lightdm.conf.d
+    printf '[Seat:*]\nuser-session=xfce\n' > /etc/lightdm/lightdm.conf.d/50-dietpex-session.conf
+  fi
 
   if command -v update-alternatives >/dev/null 2>&1; then
     update-alternatives --set x-session-manager /usr/bin/xfce4-session >/dev/null 2>&1 \
@@ -35,8 +41,7 @@ install_xfce() {
 
   if [[ $purge_gnome -eq 1 ]]; then
     info "$(msg purging_gnome)"
-    # shellcheck disable=SC2086
-    DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove $GNOME_PACKAGES >/dev/null 2>&1 \
+    DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove "${GNOME_PACKAGES[@]}" >/dev/null 2>&1 \
       || warn "could not remove all GNOME packages (some may not be installed)"
     apt-get autoremove -y >/dev/null 2>&1 || true
     info "$(msg gnome_purged)"

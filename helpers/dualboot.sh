@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091 # sourced via dynamic path
+set -euo pipefail
 #
 # dietpex OS - dual-boot helper.
 #

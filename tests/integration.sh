@@ -80,4 +80,39 @@ fi
 locale -a 2>/dev/null | grep -qi 'th_TH' || fail "th_TH locale not generated"
 pass "th_TH locale present"
 
+# 8. XFCE UI actually installs and is configured as the default session.
+echo "== xfce ui install"
+bash helpers/ui.sh install > /tmp/ui.log 2>&1 || fail "ui.sh failed: $(tail -5 /tmp/ui.log)"
+command -v xfce4-session >/dev/null 2>&1 || fail "xfce4-session not installed"
+command -v lightdm >/dev/null 2>&1 || fail "lightdm not installed"
+[[ "$(systemctl get-default)" == "graphical.target" ]] || fail "default target is not graphical"
+grep -q 'user-session=xfce' /etc/lightdm/lightdm.conf.d/50-dietpex-session.conf \
+  || fail "LightDM session config missing"
+pass "XFCE installed and set as default session"
+
+# 9. ISO URL resolution returns a reachable, current 24.04 desktop ISO.
+echo "== iso url resolution"
+iso_url="$(bash helpers/flashdrive.sh resolve 2>/dev/null || true)"
+[[ "$iso_url" == *.iso ]] || fail "resolve did not return an ISO: '$iso_url'"
+curl -fsI --max-time 30 "$iso_url" >/dev/null 2>&1 || fail "resolved ISO URL not reachable: $iso_url"
+pass "ISO URL resolves and is reachable: $iso_url"
+
+# 10. Bootable USB writer works (best-effort, via a loop device).
+echo "== usb writer"
+if command -v losetup >/dev/null 2>&1; then
+  img="$(mktemp /tmp/dietpex-usb.XXXXXX)"
+  dd if=/dev/zero of="$img" bs=1M count=4 >/dev/null 2>&1
+  loop="$(losetup -f 2>/dev/null || true)"
+  if [[ -n "$loop" ]] && losetup "$loop" "$img" 2>/dev/null; then
+    printf 'THIS IS NOT A REAL ISO, BUT TESTS THE WRITE PATH' > /tmp/fake.iso
+    echo YES | bash helpers/flashdrive.sh create "$loop" --iso /tmp/fake.iso > /tmp/usb.log 2>&1 \
+      || fail "flashdrive failed: $(tail -5 /tmp/usb.log)"
+    grep -q 'Bootable USB created' /tmp/usb.log || fail "missing success message"
+    losetup -d "$loop" >/dev/null 2>&1 || true
+    pass "USB writer wrote to block device"
+  else
+    warn "could not set up loop device - skipping USB writer test"
+  fi
+fi
+
 pass "all integration checks passed"
