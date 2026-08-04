@@ -18,6 +18,7 @@ cd "$ROOT_DIR"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 pass() { echo "PASS: $*"; }
+warn() { echo "WARN: $*" >&2; }
 
 [[ $EUID -eq 0 ]] || fail "must run as root"
 command -v systemctl >/dev/null 2>&1 || fail "systemctl not found (need systemd environment)"
