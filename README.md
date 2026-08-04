@@ -77,8 +77,10 @@ Add more languages by dropping a file in `lang/` that defines `msg()`.
 Websites and Google often show empty boxes when no Thai font is installed and
 the `th_TH` locale is missing. `install.sh --thai` (menu option 7) fixes this:
 
-- installs Thai-capable fonts (`fonts-thai-tlwg` set + color emoji, or
-  `--thai-noto` for Noto Sans Thai — prettier on Google sites)
+- installs Thai-capable fonts (`fonts-thai-tlwg` set + Noto Sans Thai + emoji)
+- writes a fontconfig rule so Thai text is rendered by Noto Sans Thai —
+  this fixes **floating above-vowels** (ิ ี ึ ื ำ) and **submerged
+  below-vowels** (ุ ู) that appear when a Latin font handles Thai marks
 - generates the `th_TH.UTF-8` locale (falls back to `localedef` where
   `locale-gen` is missing)
 - refreshes the fontconfig cache so browsers pick up the fonts

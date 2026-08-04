@@ -113,6 +113,19 @@ fi
 locale -a 2>/dev/null | grep -qi 'th_TH' || fail "th_TH locale not generated"
 pass "th_TH locale present"
 
+# 7b. Fontconfig rule forces Noto Sans Thai for Thai text (vowel fix).
+echo "== thai vowel fix"
+if command -v fc-match >/dev/null 2>&1; then
+  best="$(fc-match ':lang=th' 2>/dev/null)"
+  [[ "$best" == *NotoSansThai* || "$best" == *Waree* || "$best" == *Kinnari* ]] \
+    || fail "lang=th matched '$best' instead of a Thai font - vowels will misposition"
+  [[ -f /etc/fonts/local.conf ]] \
+    || fail "fontconfig Thai language rule not installed"
+  grep -q 'Noto Sans Thai' /etc/fonts/local.conf \
+    || fail "fontconfig rule does not reference Noto Sans Thai"
+  pass "Thai vowels will render with correct positioning"
+fi
+
 # 8. XFCE UI actually installs and is configured as the default session.
 echo "== xfce ui install"
 bash helpers/ui.sh install > /tmp/ui.log 2>&1 || fail "ui.sh failed: $(tail -5 /tmp/ui.log)"

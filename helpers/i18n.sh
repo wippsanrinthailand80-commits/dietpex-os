@@ -6,25 +6,39 @@ set -euo pipefail
 #
 # Fixes "lost" Thai characters (tofu boxes) in websites, browsers such as
 # Google Chrome, and applications by:
-#   - installing Thai-capable fonts (TLWG set, emoji; optionally Noto)
+#   - installing Thai-capable fonts (TLWG set, Noto Sans Thai, emoji)
+#   - writing a fontconfig rule so Thai text uses a Thai font (fixes
+#     floating above-vowels like ิีึื and submerged below-vowels like ุู)
 #   - generating the th_TH.UTF-8 locale
 #   - refreshing the fontconfig cache
 #
-#   i18n.sh install-thai [--noto] [--set-locale]
+#   i18n.sh install-thai [--set-locale]
 #
-#   --noto         also install fonts-noto-core (Noto Sans Thai) - prettier
-#                  on Google sites, but a larger download
 #   --set-locale   also make th_TH.UTF-8 the system-wide locale
 
 source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 THAI_FONTS=(fonts-thai-tlwg fonts-thai-tlwg-ttf fonts-thai-tlwg-web fonts-noto-color-emoji)
 
+# Fontconfig rule that forces Noto Sans Thai for Thai-language text.
+# Without this, fc-match lang=th returns a Latin font and the combining
+# marks float (above vowels) or sink (below vowels) due to wrong metrics.
+THAI_FONTCONFIG_RULE='<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <match target="pattern">
+    <test name="lang" compare="contains"><string>th</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Noto Sans Thai</string>
+    </edit>
+  </match>
+</fontconfig>'
+
 install_thai_support() {
-  local noto=0 set_locale=0 arg
+  local set_locale=0 arg
   for arg in "$@"; do
     case "$arg" in
-      --noto)       noto=1;;
+      --noto)       ;; # accepted for backward compat (now always installs Noto)
       --set-locale) set_locale=1;;
       *)            warn "ignoring unknown argument: $arg";;
     esac
@@ -35,11 +49,15 @@ install_thai_support() {
 
   apt_install locales
   apt_install "${THAI_FONTS[@]}"
+  # Noto Sans Thai (from fonts-noto-core) is required by the fontconfig rule
+  # below that fixes floating/submerged vowels. Always install it.
+  apt_install fonts-noto-core
 
-  if [[ $noto -eq 1 ]]; then
-    info "$(msg noto_note)"
-    apt_install fonts-noto-core
-  fi
+  # Install the fontconfig rule that fixes Thai vowel positioning.
+  # Without this, fc-match lang=th returns a Latin font and the combining
+  # marks float (above vowels) or sink (below vowels) due to wrong metrics.
+  printf '%s\n' "$THAI_FONTCONFIG_RULE" > /etc/fonts/local.conf
+  ok "fontconfig Thai language rule installed"
 
   # Generate the th_TH.UTF-8 locale (plus en_US as a fallback).
   if command -v locale-gen >/dev/null 2>&1; then
