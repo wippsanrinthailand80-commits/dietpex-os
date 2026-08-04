@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>dietpex OS - Thai Vowel Rendering Test</title>
+<style>
+  body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+  h1 { font-size: 24px; }
+  .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+  .pass { background: #e8f5e9; border-color: #4caf50; }
+  .label { font-weight: bold; margin-bottom: 8px; }
+  .thai { font-size: 32px; line-height: 1.6; }
+  .explain { font-size: 14px; color: #666; margin-top: 6px; }
+  .font-note { font-size: 12px; color: #999; }
+</style>
+</head>
+<body>
+
+<h1>dietpex OS - Thai Vowel Rendering Test</h1>
+<p>Open this file in Chrome on your machine. All text below should render with
+   vowels tight against consonants — no floating, no sinking, no tofu boxes.</p>
+
+<div class="test pass">
+  <div class="label">Full sentence:</div>
+  <div class="thai">กินข้าวที่ร้านอาหารอร่อยมาก</div>
+  <div class="explain">"Ate food at a very delicious restaurant" — all vowels in correct position</div>
+</div>
+
+<div class="test pass">
+  <div class="label">Floating above-vowels (should sit ON the consonant):</div>
+  <div class="thai">กิ กี กึ กื กำ ก็ ก่ ก้ ก๊ ก๋</div>
+  <div class="explain">สระอะ สระอิ สระอี สระอึ สระอื สระอำ สระเกาะ สระโท สระตรี สระจัตวา สระไร้ยศ</div>
+</div>
+
+<div class="test pass">
+  <div class="label">Submerged below-vowels (should sit BELOW the consonant):</div>
+  <div class="thai">กุ กู</div>
+  <div class="explain">สระอุ สระอู</div>
+</div>
+
+<div class="test pass">
+  <div class="label">Mixed with numbers and punctuation:</div>
+  <div class="thai">อาหาร 5 จาน ราคา 350 บาท (อร่อยมาก!)</div>
+  <div class="explain">5 dishes, 350 baht — vowels + numbers together</div>
+</div>
+
+<div class="test pass">
+  <div class="label">Long vowel combinations:</div>
+  <div class="thai">เดี๋ยว นึก คิดถึง รู้สึก</div>
+  <div class="explain">เดี๋ยว (wait), นึก (think), คิดถึง (miss you), รู้สึก (feel)</div>
+</div>
+
+<div class="font-note">
+  <p><strong>What to check:</strong></p>
+  <ul>
+    <li>Vowels ิ ี ึ ื should be directly above the consonant (not floating high)</li>
+    <li>Vowels ุ ู should be directly below the consonant (not sinking far down)</li>
+    <li>No square boxes (☐) anywhere — all Thai glyphs visible</li>
+    <li>Tone marks ่ ้ ๊ ๋ should also sit on the consonant</li>
+  </ul>
+  <p>If any vowels look wrong, the fontconfig rule is not installed.
+     Run: <code>sudo bash helpers/i18n.sh install-thai</code></p>
+</div>
+
+</body>
+</html>

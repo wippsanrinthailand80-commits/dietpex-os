@@ -127,6 +127,15 @@ if command -v fc-match >/dev/null 2>&1; then
   pass "Thai vowels will render with correct positioning"
 fi
 
+# 7c. HarfBuzz shapes Thai vowels onto consonants (not .notdef boxes).
+echo "== harfbuzz thai shaping"
+if command -v hb-shape >/dev/null 2>&1; then
+  shape="$(echo -n 'กิน' | hb-shape "$(fc-match --format='%{file}' ':lang=th')" 2>/dev/null)"
+  echo "$shape" | grep -q '.notdef' && fail "Thai shaped to .notdef (tofu boxes): $shape"
+  echo "$shape" | grep -q 'uni0E34' || fail "vowel ิ not found in shaped output: $shape"
+  pass "HarfBuzz correctly shapes Thai vowels"
+fi
+
 # 8. XFCE UI actually installs and is configured as the default session.
 echo "== xfce ui install"
 bash helpers/ui.sh install > /tmp/ui.log 2>&1 || fail "ui.sh failed: $(tail -5 /tmp/ui.log)"
