@@ -47,9 +47,9 @@ pass "udisks2 not masked (USB mounting still works)"
 
 # 2c. Firmware refresh unit is referenced with its real name.
 echo "== fwupd-refresh unit name"
-grep -q '^fwupd-refresh.service' config/services-disable.list \
+grep -Fq 'fwupd-refresh.service' config/services-disable.list \
   || fail "fwupd-refresh.service (not fwupd.refresh.service) should be in the list"
-grep -q 'fwupd.refresh.service' config/services-disable.list \
+grep -Fq 'fwupd.refresh.service' config/services-disable.list \
   && fail "stale fwupd.refresh.service entry still present"
 pass "fwupd-refresh unit name is correct"
 
