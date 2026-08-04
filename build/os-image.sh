@@ -40,12 +40,9 @@ lb config \
   --binary-images iso-hybrid \
   --mode ubuntu \
   --archive-areas "main restricted universe multiverse" \
-  --debootstrap-options "--variant=minbase" \
   --bootappend-live "boot=live config quiet splash" \
   --linux-flavours generic \
   --iso-volume "dietpex OS 24.04" \
-  --hostname dietpex-os \
-  --username dietpex \
   --debian-installer false
 
 info "building ISO (this downloads packages and may take a while)"
