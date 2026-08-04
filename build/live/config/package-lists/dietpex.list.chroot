@@ -27,6 +27,7 @@ curl
 ca-certificates
 
 # --- Build-time tooling that must exist inside the chroot ---
-# isohybrid (from syslinux) finalizes the ISO into a hybrid image that
-# boots from both USB and CD.
+# isohybrid (from syslinux-utils) finalizes the ISO into a hybrid image
+# that boots from both USB and CD. It runs via binary.sh inside the chroot.
 syslinux
+syslinux-utils
