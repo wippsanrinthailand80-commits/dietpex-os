@@ -107,6 +107,15 @@ for p in "${prot[@]}"; do
 done
 t "no protected package also in purge list" "0" "$overlap"
 
+# --- safety: udisks2 must NOT be masked (file manager mounts USB drives) -----
+t "udisks2.socket not in mask list" "no" "$(contains udisks2.socket svcs && echo yes || echo no)"
+t "udisks2.service not in mask list" "no" "$(contains udisks2.service svcs && echo yes || echo no)"
+
+# --- --skip-services flag -----------------------------------------------------
+MODE_SKIP_SERVICES=0
+parse_args --skip-services
+t "--skip-services sets MODE_SKIP_SERVICES" "1" "$MODE_SKIP_SERVICES"
+
 rm -rf "$FIXTURE_LIST" "$TMP"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"

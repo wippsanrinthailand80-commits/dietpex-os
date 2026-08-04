@@ -35,6 +35,24 @@ st="$(systemctl is-enabled apt-daily.timer 2>/dev/null || true)"
 [[ "$st" == "masked" ]] || fail "apt-daily.timer is '$st' (expected masked)"
 pass "apt-daily.timer masked"
 
+# 2b. But udisks2 (needed to mount USB drives) must NOT be masked.
+echo "== udisks2 left usable"
+for u in udisks2.service udisks2.socket; do
+  st="$(systemctl is-enabled "$u" 2>/dev/null || true)"
+  if [[ "$st" == "masked" ]]; then
+    fail "$u was masked - USB drives will not mount in the file manager"
+  fi
+done
+pass "udisks2 not masked (USB mounting still works)"
+
+# 2c. Firmware refresh unit is referenced with its real name.
+echo "== fwupd-refresh unit name"
+grep -q '^fwupd-refresh.service' config/services-disable.list \
+  || fail "fwupd-refresh.service (not fwupd.refresh.service) should be in the list"
+grep -q 'fwupd.refresh.service' config/services-disable.list \
+  && fail "stale fwupd.refresh.service entry still present"
+pass "fwupd-refresh unit name is correct"
+
 # 3. Protected packages survived.
 echo "== protected packages"
 dpkg-query -W -f='${Status}\n' apt 2>/dev/null | grep -q 'install ok installed' \
@@ -68,6 +86,21 @@ bash install.sh --lang th --help > /tmp/help.log 2>&1 || fail "install.sh --help
 bash install.sh --lang en --trim-only > /tmp/install.log 2>&1 || fail "install.sh --trim-only failed"
 grep -q 'ERROR' /tmp/install.log && fail "installer log contains ERROR"
 pass "installer trim-only + help ok"
+
+# 6b. Flags with missing arguments fail cleanly, not with a bash crash.
+echo "== missing-arg handling"
+for args in "--make-usb" "--lang"; do
+  out="$(bash install.sh $args 2>&1)" && rc=0 || rc=$?
+  [[ $rc -eq 1 ]] || fail "'install.sh $args' should exit 1, got $rc"
+  grep -qiE 'unbound|traceback|line [0-9]+' <<<"$out" && fail "'install.sh $args' crashed with an unhandled error"
+done
+pass "missing arguments fail cleanly"
+
+# 6c. --skip-services runs the purge phase without masking anything.
+echo "== skip-services"
+bash dietpex.sh --dry-run --skip-services > /tmp/skip.log 2>&1 || fail "dietpex.sh --skip-services failed"
+grep -q 'WOULD disable' /tmp/skip.log && fail "skip-services still tried to mask services"
+pass "skip-services skips the service phase"
 
 # 7. Thai support actually makes Thai renderable.
 echo "== thai support"
@@ -112,6 +145,20 @@ if command -v losetup >/dev/null 2>&1; then
     pass "USB writer wrote to block device"
   else
     warn "could not set up loop device - skipping USB writer test"
+  fi
+
+  # 10b. The writer must refuse to destroy the disk the system is on.
+  root_dev="$(findmnt -no SOURCE / 2>/dev/null || true)"
+  root_disk="${root_dev%%[0-9]*}"   # /dev/sda1 -> /dev/sda
+  root_disk="${root_disk%p}"        # /dev/nvme0n1p2 -> /dev/nvme0n1
+  if [[ -n "$root_disk" && -b "$root_disk" ]]; then
+    bash helpers/flashdrive.sh create "$root_disk" --iso /tmp/fake.iso > /tmp/refuse.log 2>&1 \
+      && fail "flashdrive wrote to the system disk!"
+    grep -qi 'refusing' /tmp/refuse.log \
+      || fail "did not refuse the system disk: $(tail -1 /tmp/refuse.log)"
+    pass "refuses to write the system disk"
+  else
+    warn "could not identify a real system disk - skipping refusal test"
   fi
 fi
 

@@ -41,12 +41,15 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 if [[ ! -d "$SCRIPT_DIR/config" ]]; then
   echo '[dietpex] fetching dietpex OS sources...'
   tmp="$(mktemp -d)"
-  if command -v git >/dev/null 2>&1; then
-    git clone --depth 1 "$REPO" "$tmp/dietpex-os" >/dev/null 2>&1
-  else
+  if command -v git >/dev/null 2>&1 && git clone --depth 1 "$REPO" "$tmp/dietpex-os" >/dev/null 2>&1; then
+    :
+  elif command -v curl >/dev/null 2>&1; then
     curl -fsSL "${REPO%.git}/archive/refs/heads/main.tar.gz" \
       | tar -xz -C "$tmp"
     mv "$tmp/dietpex-os-main" "$tmp/dietpex-os"
+  else
+    echo '[dietpex] ERROR need git or curl to fetch dietpex OS sources' >&2
+    exit 1
   fi
   exec bash "$tmp/dietpex-os/install.sh" "$@"
 fi
@@ -64,7 +67,7 @@ PURGE_GNOME=0
 NOTO=0
 
 usage() {
-  sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 parse_args() {
@@ -76,14 +79,14 @@ parse_args() {
       --purge-gnome)  PURGE_GNOME=1;;
       --dual-boot)    ACTION=dualboot;;
       --windows-wsl)  ACTION=windows;;
-      --make-usb)     shift; ACTION=usb; DEVICE="$1";;
+      --make-usb)     shift || die "usage: install.sh --make-usb /dev/sdX"; ACTION=usb; DEVICE="${1:-}";;
       --thai)         ACTION=thai;;
       --thai-noto)    ACTION=thai; NOTO=1;;
-      --lang)         shift; LANG_CODE="$1";;
+      --lang)         shift || die "usage: install.sh --lang en|th"; LANG_CODE="${1:-}"; [[ -n "$LANG_CODE" ]] || die "usage: install.sh --lang en|th";;
       -h|--help)      usage; exit 0;;
       *)              warn "ignoring unknown argument: $1";;
     esac
-    shift
+    shift || break
   done
 }
 
@@ -91,11 +94,13 @@ parse_args() {
 
 run_full() {
   require_root
+  # Install the desktop and Thai support first so the apt cache is still warm
+  # (dietpex's cleanup empties it). The trim runs last and finishes the job.
+  bash "$HELPERS_DIR/ui.sh" install --purge-gnome
+  run_thai
   info "$(msg trim_started)"
   bash "$SCRIPT_DIR/dietpex.sh" --purge
   ok "$(msg trim_done)"
-  bash "$HELPERS_DIR/ui.sh" install --purge-gnome
-  run_thai
   info "$(msg complete)"
 }
 

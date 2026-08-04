@@ -35,19 +35,56 @@ resolve_iso_url() {
   fi
 }
 
+# block_size_bytes <device> - size of a block device in bytes.
+block_size_bytes() {
+  if command -v blockdev >/dev/null 2>&1; then
+    blockdev --getsize64 "$1" 2>/dev/null
+  else
+    local name="${1#/dev/}"
+    [[ -r "/sys/class/block/$name/size" ]] \
+      && echo "$(( $(< "/sys/class/block/$name/size") * 512 ))"
+  fi
+}
+
+# iso_size_bytes <path-or-url> - size of the ISO before download/write.
+iso_size_bytes() {
+  local src="$1"
+  if [[ "$src" =~ ^https?:// ]]; then
+    curl -fsSI --max-time 30 "$src" 2>/dev/null \
+      | tr -d '\r' | awk -F': ' 'tolower($1)=="content-length"{print $2}' | tail -1
+  elif [[ -f "$src" ]]; then
+    stat -c%s "$src"
+  fi
+}
+
+# device_is_in_use <device> - true if the device is the root disk or has any
+# mounted partition (writing to it would destroy a live system).
+device_is_in_use() {
+  local dev="$1"
+  local root_dev src
+  root_dev="$(findmnt -no SOURCE / 2>/dev/null || echo "")"
+  if [[ -n "$root_dev" ]] && [[ "$root_dev" == "$dev"* ]]; then
+    return 0
+  fi
+  while IFS= read -r src; do
+    [[ "$src" == "$dev"* ]] && return 0
+  done < <(findmnt -rn -o SOURCE 2>/dev/null)
+  return 1
+}
+
 create_bootable_usb() {
   require_root
 
   local device="${1:?usage: flashdrive.sh create <device> [--iso <path-or-url>]}"
   shift
-  local iso="" iso_path=""
+  local iso="" iso_path="" iso_size dev_size tmp_iso=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --iso) shift; iso="$1";;
+      --iso) shift || die "usage: flashdrive.sh create <device> --iso <path-or-url>"; iso="${1:-}"; [[ -n "$iso" ]] || die "usage: flashdrive.sh create <device> --iso <path-or-url>";;
       *) warn "ignoring unknown argument: $1";;
     esac
-    shift
+    shift || break
   done
 
   if [[ -z "$iso" ]]; then
@@ -57,29 +94,37 @@ create_bootable_usb() {
 
   need_cmd dd
   need_cmd curl
+  need_cmd findmnt
 
   [[ -b "$device" ]] || die "not a block device: $device"
-
-  if [[ "$iso" =~ ^https?:// ]]; then
-    iso_path="$(mktemp /tmp/dietpex-iso.XXXXXX)"
-    info "downloading $iso"
-    curl -fL --progress-bar "$iso" -o "$iso_path" || die "download failed"
-  else
-    iso_path="$iso"
+  if device_is_in_use "$device"; then
+    die "refusing to write $device: it looks like a mounted/system disk"
   fi
-  [[ -f "$iso_path" ]] || die "ISO not found: $iso_path"
+
+  iso_size="$(iso_size_bytes "$iso")"
+  dev_size="$(block_size_bytes "$device")"
+  if [[ -n "$iso_size" && -n "$dev_size" && "$iso_size" -gt "$dev_size" ]]; then
+    die "ISO is larger than $device (ISO ${iso_size} B vs device ${dev_size} B)"
+  fi
 
   read -r -p "$(msg usb_confirm)" answer || die "aborted by user"
   [[ "$answer" == "YES" ]] || die "aborted by user"
+
+  if [[ "$iso" =~ ^https?:// ]]; then
+    tmp_iso="$(mktemp /tmp/dietpex-iso.XXXXXX)"
+    trap '[[ -n "$tmp_iso" ]] && rm -f "$tmp_iso"' EXIT
+    info "downloading $iso"
+    curl -fL --progress-bar "$iso" -o "$tmp_iso" || die "download failed"
+    iso_path="$tmp_iso"
+  else
+    [[ -f "$iso" ]] || die "ISO not found: $iso"
+    iso_path="$iso"
+  fi
 
   info "$(msg usb_start)"
   sync
   dd if="$iso_path" of="$device" bs=4M status=progress conv=fsync
   sync
-
-  if [[ "$iso_path" != "$iso" ]]; then
-    rm -f "$iso_path"
-  fi
 
   ok "$(msg usb_done)"
   info "boot the machine from this USB to install dietpex OS."

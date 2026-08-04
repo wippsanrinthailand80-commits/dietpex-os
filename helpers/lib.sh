@@ -76,7 +76,15 @@ APT_UPDATED=0
 apt_update() {
   if [[ $APT_UPDATED -eq 0 ]]; then
     info "$(msg apt_update)"
-    DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null || warn "apt-get update reported errors"
+    local log
+    log="$(mktemp /tmp/dietpex-apt-update.XXXXXX)"
+    if ! DEBIAN_FRONTEND=noninteractive apt-get update -y >"$log" 2>&1; then
+      warn "apt-get update failed - last lines of output:"
+      tail -5 "$log" >&2
+      rm -f "$log"
+    else
+      rm -f "$log"
+    fi
     APT_UPDATED=1
   fi
 }

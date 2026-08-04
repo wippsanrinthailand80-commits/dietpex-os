@@ -14,6 +14,8 @@
 #   --dry-run     Only report what would change; make no modifications
 #   --no-clean    Skip apt autoremove / cache cleanup / user cleanup
 #   --snap        Keep the snap ecosystem (disable snapd masking)
+#   --skip-services  Skip the service masking phase entirely (for WSL and
+#                    other environments without systemd)
 #   --keep-list FILE   Use an alternate services-disable list
 #   --purge-list FILE  Use an alternate packages-remove list
 #   -q, --quiet   Suppress informational output
@@ -34,6 +36,7 @@ MODE_PURGE=0
 MODE_DRY_RUN=0
 MODE_CLEAN=1
 MODE_SNAP=0
+MODE_SKIP_SERVICES=0
 QUIET=0
 
 # ---------------------------------------------------------------- utilities
@@ -87,7 +90,11 @@ check_os() {
     ubuntu|debian|linuxmint|pop|neon|elementary|kali|raspbian) ;;
     *) warn "unsupported distro '$ID' - proceeding anyway";;
   esac
-  command -v systemctl >/dev/null 2>&1 || die "systemd (systemctl) not found"
+  if [[ $MODE_SKIP_SERVICES -eq 1 ]]; then
+    warn "skipping service masking (--skip-services); purge phase only"
+  else
+    command -v systemctl >/dev/null 2>&1 || die "systemd (systemctl) not found (use --skip-services to skip service masking)"
+  fi
   command -v dpkg-query >/dev/null 2>&1 || die "dpkg-query not found"
   info "detected: ${PRETTY_NAME:-$ID $VERSION_ID}"
 }
@@ -122,9 +129,9 @@ disable_services() {
   done
 
   if [[ $MODE_DRY_RUN -eq 0 && $MODE_SNAP -eq 0 ]]; then
-    # Stop and unmount snap loop devices if snapd was just masked.
+    # Snap mounts are left behind when snapd is masked, so detach them.
     systemctl stop snapd.mounts.service >/dev/null 2>&1 || true
-    swapoff /snap >/dev/null 2>&1 || true
+    umount -R /snap >/dev/null 2>&1 || true
     systemctl daemon-reload
     info "reloaded systemd daemon"
   fi
@@ -221,13 +228,14 @@ parse_args() {
       --dry-run)      MODE_DRY_RUN=1;;
       --no-clean)     MODE_CLEAN=0;;
       --snap)         MODE_SNAP=1;;
+      --skip-services) MODE_SKIP_SERVICES=1;;
       --keep-list)    shift; SERVICES_LIST="$1";;
       --purge-list)   shift; PURGE_LIST="$1";;
       -q|--quiet)     QUIET=1;;
       -h|--help)      usage; exit 0;;
       *)              warn "ignoring unknown argument: $1";;
     esac
-    shift
+    shift || break
   done
 }
 
@@ -247,7 +255,9 @@ main() {
     warn "dry run enabled - reporting only"
   fi
 
-  disable_services
+  if [[ $MODE_SKIP_SERVICES -eq 0 ]]; then
+    disable_services
+  fi
 
   if [[ $MODE_PURGE -eq 1 ]]; then
     purge_packages

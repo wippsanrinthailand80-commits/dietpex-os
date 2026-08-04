@@ -16,7 +16,7 @@ source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 install_in_wsl() {
   local install_ui=0
-  [[ "$1" == "--ui" ]] && install_ui=1
+  [[ "${1:-}" == "--ui" ]] && install_ui=1
 
   info "$(msg wsl_start)"
 
@@ -26,13 +26,22 @@ install_in_wsl() {
 
   require_root
 
-  # Trim the base system first (reuses the dietpex core).
-  bash "$ROOT_DIR/dietpex.sh" --purge || warn "dietpex trim reported errors"
+  # WSL may not have systemd (Windows 10 / systemd disabled). In that case
+  # skip the service-masking phase and only purge bloatware.
+  local trim_opts=(--purge)
+  if ! command -v systemctl >/dev/null 2>&1; then
+    warn "systemd not found - skipping service masking (purge only)"
+    trim_opts+=(--skip-services)
+  fi
 
+  # Install the desktop first while the apt cache is warm, then trim.
   if [[ $install_ui -eq 1 ]]; then
     bash "$HELPERS_DIR/ui.sh" install
     info "$(msg wsl_gui_hint)"
   fi
+
+  # Trim the base system (reuses the dietpex core).
+  bash "$ROOT_DIR/dietpex.sh" "${trim_opts[@]}" || warn "dietpex trim reported errors"
 
   ok "$(msg wsl_done)"
 }

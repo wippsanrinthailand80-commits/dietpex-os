@@ -42,7 +42,7 @@ sudo bash install.sh --lang th       # Thai UI
 
 ## What it does
 
-1. **Disables (masks) ~46 unnecessary systemd services**, so they can never be
+1. **Disables (masks) ~42 unnecessary systemd services**, so they can never be
    started again — not even by package upgrades. Notable victims:
    - `snapd` (snap auto-updates, loop mounts)
    - `cups` / `cups-browsed` (printing)
@@ -51,7 +51,10 @@ sudo bash install.sh --lang th       # Thai UI
    - `whoopsie` / `apport` / `kerneloops` (crash reporting)
    - `apt-daily*` / `unattended-upgrades` (background apt automation)
    - `fwupd` (firmware update daemon)
-   - `udisks2`, `smartd`, `packagekit`, `rtkit` and more
+   - `smartd`, `packagekit` and more
+   - Deliberately kept: `udisks2` (so USB drives still mount in the file
+     manager), `thermald` (laptop cooling) and `rtkit` (audio real-time
+     priority).
 
 2. **Optionally purges bloatware** (included in every install path):
    LibreOffice, Thunderbird, games, media players, photo apps, backup tools,
@@ -82,6 +85,17 @@ the `th_TH` locale is missing. `install.sh --thai` (menu option 7) fixes this:
 
 Thai support is also included in the **full install** and **WSL2** paths.
 
+## Bootable USB
+
+`install.sh --make-usb /dev/sdX` (menu option 6) writes the current Ubuntu
+24.04 desktop ISO to a USB device. The ISO URL is resolved live from the
+Ubuntu releases page so it never goes stale (`helpers/flashdrive.sh resolve`
+prints the URL that would be used). Safety rails:
+
+- refuses to write a device that is the system disk or has mounted partitions
+- checks the device is large enough for the ISO before writing
+- asks for explicit `YES` confirmation (and shows the device first)
+
 ## Dual boot ("two OS")
 
 Run `install.sh --dual-boot` (or menu option 4) inside your Ubuntu system. It
@@ -93,7 +107,8 @@ create a bootable USB (option 6) and choose "Install Ubuntu alongside".
 
 Run `install.sh --windows-wsl` (or menu option 5) inside WSL2. It trims the
 WSL Ubuntu and installs XFCE, which renders through WSLg on Windows 11. Start
-the desktop later with `startxfce4`.
+the desktop later with `startxfce4`. If WSL has systemd disabled, the service
+masking phase is skipped automatically (purge still runs).
 
 ## Testing
 
@@ -103,7 +118,9 @@ CI runs automatically on every push (`.github/workflows/ci.yml`):
   protected-package handling). Run locally: `bash tests/unit.sh`
 - `tests/integration.sh` — real trim in a systemd-enabled Ubuntu container:
   verifies services are actually masked, bloat is actually purged, protected
-  packages survive, and dry-run is non-destructive.
+  packages survive, and dry-run is non-destructive. Also verifies the USB
+  writer (loop device), that it refuses the system disk, that `udisks2` stays
+  unmasked, XFCE boots as the default session, and Thai rendering works.
 - `shellcheck` + `bash -n` on every script.
 
 ## Customizing

@@ -50,12 +50,10 @@ update-notifier.service
 
 # --- Firmware update daemon ---
 fwupd.service
-fwupd.refresh.service
+fwupd-refresh.service
 fwupd-refresh.timer
 
 # --- Disk / storage daemons ---
-udisks2.service
-udisks2.socket
 smartd.service
 
 # --- Misc desktop / network helpers ---
@@ -64,8 +62,9 @@ NetworkManager-wait-online.service
 systemd-networkd-wait-online.service
 switcheroo-control.service
 bolt.service
-rtkit.service
 packagekit.service
 packagekit-offline-update.service
-thermald.service
 power-profiles-daemon.service
+# NOTE: udisks2 is intentionally NOT masked - the file manager needs it to
+#       mount USB drives / SD cards. thermald and rtkit are also kept so
+#       laptops stay cool and audio has real-time priority.
