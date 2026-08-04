@@ -24,8 +24,10 @@ die() { printf '[build] ERROR: %s\n' "$*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "must run as root"
 
-command -v lb >/dev/null 2>&1 || { info "installing live-build..."; apt-get update -qq; DEBIAN_FRONTEND=noninteractive apt-get install -y -qq live-build >/dev/null; }
+command -v lb >/dev/null 2>&1 || { info "installing live-build..."; apt-get update -qq; DEBIAN_FRONTEND=noninteractive apt-get install -y -qq live-build syslinux-utils >/dev/null; }
 command -v lb >/dev/null 2>&1 || die "live-build (lb) not available"
+command -v isohybrid >/dev/null 2>&1 || { info "installing isohybrid..."; DEBIAN_FRONTEND=noninteractive apt-get install -y -qq syslinux-utils >/dev/null; }
+command -v isohybrid >/dev/null 2>&1 || die "isohybrid not available (syslinux-utils)"
 
 rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR"
