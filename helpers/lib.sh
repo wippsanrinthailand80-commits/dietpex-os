@@ -24,7 +24,7 @@ load_lang() {
   esac
   LANG_CODE="$code"
   # shellcheck source=lang/en.sh
-  # shellcheck disable=SC1090 # code is selected at runtime
+  # shellcheck disable=SC1090,SC1091 # selected at runtime
   source "$ROOT_DIR/lang/$code.sh"
 }
 
