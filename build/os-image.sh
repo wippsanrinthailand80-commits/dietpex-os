@@ -44,6 +44,8 @@ lb config \
   --archive-areas "main restricted universe multiverse" \
   --bootappend-live "boot=live config quiet splash" \
   --linux-flavours generic \
+  --initramfs live-boot \
+  --initsystem systemd \
   --iso-volume "dietpex OS 24.04" \
   --debian-installer false \
   --bootloader syslinux \
