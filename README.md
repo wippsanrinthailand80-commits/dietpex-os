@@ -32,7 +32,9 @@ sudo bash install.sh --trim-only
 sudo bash install.sh --dual-boot
 sudo bash install.sh --windows-wsl
 sudo bash install.sh --make-usb /dev/sdb
-sudo bash install.sh --lang th     # Thai UI
+sudo bash install.sh --thai          # Thai fonts + locale (no "tofu" boxes)
+sudo bash install.sh --thai-noto     # same, plus Noto Sans Thai (better on Google)
+sudo bash install.sh --lang th       # Thai UI
 ```
 
 > **Security note:** piping a script from the internet into bash is risky.
@@ -66,6 +68,19 @@ sudo bash install.sh --lang th     # Thai UI
 English and Thai are built in. Language is auto-detected from the locale
 (`th_TH.UTF-8` → Thai) and can be forced with `--lang th` / `--lang en`.
 Add more languages by dropping a file in `lang/` that defines `msg()`.
+
+## Thai rendering (no "lost" Thai)
+
+Websites and Google often show empty boxes when no Thai font is installed and
+the `th_TH` locale is missing. `install.sh --thai` (menu option 7) fixes this:
+
+- installs Thai-capable fonts (`fonts-thai-tlwg` set + color emoji, or
+  `--thai-noto` for Noto Sans Thai — prettier on Google sites)
+- generates the `th_TH.UTF-8` locale (falls back to `localedef` where
+  `locale-gen` is missing)
+- refreshes the fontconfig cache so browsers pick up the fonts
+
+Thai support is also included in the **full install** and **WSL2** paths.
 
 ## Dual boot ("two OS")
 
@@ -119,6 +134,7 @@ dietpex-os/
 ├── helpers/
 │   ├── lib.sh                  # shared library (detect, apt, i18n)
 │   ├── ui.sh                   # XFCE UI install (+ optional GNOME removal)
+│   ├── i18n.sh                 # Thai fonts + locale support
 │   ├── dualboot.sh             # GRUB dual-boot menu setup
 │   ├── windows-wsl.sh          # WSL2 install path
 │   └── flashdrive.sh           # bootable USB creator

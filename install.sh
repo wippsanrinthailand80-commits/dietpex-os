@@ -25,6 +25,8 @@
 #   --dual-boot       Configure the GRUB dual-boot menu (os-prober)
 #   --windows-wsl     Install inside Windows via WSL2
 #   --make-usb DEV    Write the Ubuntu ISO to a USB device
+#   --thai            Install Thai fonts + locale support (no tofu boxes)
+#   --thai-noto       Same as --thai, plus Noto Sans Thai fonts
 #   --lang CODE       Force language: en, th (default: auto-detect)
 #   -h, --help        Show this help
 
@@ -50,6 +52,7 @@ if [[ ! -d "$SCRIPT_DIR/config" ]]; then
 fi
 
 # shellcheck source=helpers/lib.sh
+# shellcheck disable=SC1091 # path is resolved at runtime
 source "$SCRIPT_DIR/helpers/lib.sh"
 
 # --------------------------------------------------------------------- options
@@ -58,6 +61,7 @@ LANG_CODE="auto"
 ACTION=""
 DEVICE=""
 PURGE_GNOME=0
+NOTO=0
 
 usage() {
   sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
@@ -73,6 +77,8 @@ parse_args() {
       --dual-boot)    ACTION=dualboot;;
       --windows-wsl)  ACTION=windows;;
       --make-usb)     shift; ACTION=usb; DEVICE="$1";;
+      --thai)         ACTION=thai;;
+      --thai-noto)    ACTION=thai; NOTO=1;;
       --lang)         shift; LANG_CODE="$1";;
       -h|--help)      usage; exit 0;;
       *)              warn "ignoring unknown argument: $1";;
@@ -89,6 +95,7 @@ run_full() {
   bash "$SCRIPT_DIR/dietpex.sh" --purge
   ok "$(msg trim_done)"
   bash "$HELPERS_DIR/ui.sh" install --purge-gnome
+  run_thai
   info "$(msg complete)"
 }
 
@@ -112,6 +119,14 @@ run_dualboot() {
 
 run_windows() {
   bash "$HELPERS_DIR/windows-wsl.sh" install --ui
+  run_thai
+}
+
+run_thai() {
+  require_root
+  local args=(install-thai)
+  [[ $NOTO -eq 1 ]] && args+=(--noto)
+  bash "$HELPERS_DIR/i18n.sh" "${args[@]}"
 }
 
 run_usb() {
@@ -141,6 +156,7 @@ run_menu() {
     printf '  %s\n' "$(msg opt_dualboot)"
     printf '  %s\n' "$(msg opt_windows)"
     printf '  %s\n' "$(msg opt_usb)"
+    printf '  %s\n' "$(msg opt_thai)"
     printf '  %s\n' "$(msg opt_quit)"
     printf '%s' "$(msg enter_choice)"
     read -r choice || exit 0
@@ -151,6 +167,7 @@ run_menu() {
       4) run_dualboot; return 0;;
       5) run_windows; return 0;;
       6) printf '%s' "$(msg usb_confirm_device)"; read -r d; DEVICE="$d"; run_usb; return 0;;
+      7) run_thai; return 0;;
       0) return 0;;
       *) warn "$(msg invalid_choice)";;
     esac
@@ -175,6 +192,7 @@ main() {
       dualboot)  run_dualboot;;
       windows)   run_windows;;
       usb)       run_usb;;
+      thai)      run_thai;;
     esac
   else
     run_menu

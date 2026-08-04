@@ -19,6 +19,7 @@ msg() {
     opt_dualboot)          printf '%s\n' "4) Set up dual-boot GRUB menu";;
     opt_windows)           printf '%s\n' "5) Install inside Windows (WSL2)";;
     opt_usb)               printf '%s\n' "6) Create a bootable USB from the Ubuntu ISO";;
+    opt_thai)              printf '%s\n' "7) Install Thai fonts + locale support";;
     opt_quit)              printf '%s\n' "0) Quit";;
     enter_choice)          printf '%s\n' "Enter your choice: ";;
     invalid_choice)        printf '%s\n' "Invalid choice.";;
@@ -40,6 +41,11 @@ msg() {
     usb_done)              printf '%s\n' "Bootable USB created.";;
     reboot_hint)           printf '%s\n' "A reboot is recommended: sudo reboot";;
     complete)              printf '%s\n' "Installation complete.";;
+    thai_start)            printf '%s\n' "Installing Thai fonts and locale support...";;
+    thai_done)             printf '%s\n' "Thai fonts and locale support installed.";;
+    locale_set)            printf '%s\n' "System locale set to th_TH.UTF-8 (reboot to apply).";;
+    thai_hint)             printf '%s\n' "Thai will now render correctly in websites, browsers (Google) and apps.";;
+    noto_note)             printf '%s\n' "Also installing Noto fonts (better Thai on Google sites)...";;
     * )                    printf '%s\n' "$*";;
   esac
 }

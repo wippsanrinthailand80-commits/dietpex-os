@@ -69,4 +69,15 @@ bash install.sh --lang en --trim-only > /tmp/install.log 2>&1 || fail "install.s
 grep -q 'ERROR' /tmp/install.log && fail "installer log contains ERROR"
 pass "installer trim-only + help ok"
 
+# 7. Thai support actually makes Thai renderable.
+echo "== thai support"
+bash helpers/i18n.sh install-thai > /tmp/i18n.log 2>&1 || fail "i18n helper failed"
+grep -q 'ERROR' /tmp/i18n.log && fail "i18n log contains ERROR"
+if command -v fc-list >/dev/null 2>&1; then
+  fc-list :lang=th 2>/dev/null | grep -q . || fail "no Thai-capable fonts registered with fontconfig"
+  pass "Thai fonts registered with fontconfig"
+fi
+locale -a 2>/dev/null | grep -qi 'th_TH' || fail "th_TH locale not generated"
+pass "th_TH locale present"
+
 pass "all integration checks passed"

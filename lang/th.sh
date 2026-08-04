@@ -19,6 +19,7 @@ msg() {
     opt_dualboot)          printf '%s\n' "4) ตั้งค่า dual-boot (เมนู GRUB)";;
     opt_windows)           printf '%s\n' "5) ติดตั้งภายใน Windows (WSL2)";;
     opt_usb)               printf '%s\n' "6) สร้าง USB สำหรับติดตั้งจาก ISO ของ Ubuntu";;
+    opt_thai)              printf '%s\n' "7) ติดตั้งฟอนต์ภาษาไทย + การรองรับภาษา";;
     opt_quit)              printf '%s\n' "0) ออกจากโปรแกรม";;
     enter_choice)          printf '%s\n' "ป้อนตัวเลือก: ";;
     invalid_choice)        printf '%s\n' "ตัวเลือกไม่ถูกต้อง";;
@@ -40,6 +41,11 @@ msg() {
     usb_done)              printf '%s\n' "สร้าง USB ที่บูตได้แล้ว";;
     reboot_hint)           printf '%s\n' "แนะนำให้รีบูตเครื่อง: sudo reboot";;
     complete)              printf '%s\n' "การติดตั้งเสร็จสมบูรณ์";;
+    thai_start)            printf '%s\n' "กำลังติดตั้งฟอนต์ภาษาไทยและการรองรับภาษา...";;
+    thai_done)             printf '%s\n' "ติดตั้งฟอนต์และการรองรับภาษาไทยเสร็จแล้ว";;
+    locale_set)            printf '%s\n' "ตั้งค่าภาษาของระบบเป็น th_TH.UTF-8 แล้ว (รีบูตเพื่อใช้งาน)";;
+    thai_hint)             printf '%s\n' "ภาษาไทยจะแสดงผลถูกต้องบนเว็บไซต์ เบราว์เซอร์ (Google) และแอปพลิเคชัน";;
+    noto_note)             printf '%s\n' "กำลังติดตั้งฟอนต์ Noto เพิ่ม (ภาษาไทยบนเว็บ Google สวยขึ้น)...";;
     * )                    printf '%s\n' "$*";;
   esac
 }

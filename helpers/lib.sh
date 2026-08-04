@@ -87,3 +87,8 @@ apt_install() {
   apt_update
   DEBIAN_FRONTEND=noninteractive apt-get install -y "$@" || die "failed to install: $*"
 }
+
+# Auto-load a language at source time so helpers work standalone too.
+if ! declare -F msg >/dev/null 2>&1; then
+  load_lang "$(auto_lang)"
+fi
