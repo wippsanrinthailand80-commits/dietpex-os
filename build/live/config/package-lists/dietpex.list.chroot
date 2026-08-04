@@ -29,5 +29,8 @@ ca-certificates
 # --- Build-time tooling that must exist inside the chroot ---
 # isohybrid (from syslinux-utils) finalizes the ISO into a hybrid image
 # that boots from both USB and CD. It runs via binary.sh inside the chroot.
+# librsvg2-bin renders the live-build theme's boot splash.
 syslinux
+syslinux-common
 syslinux-utils
+librsvg2-bin

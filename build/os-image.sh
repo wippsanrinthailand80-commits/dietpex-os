@@ -46,7 +46,8 @@ lb config \
   --linux-flavours generic \
   --iso-volume "dietpex OS 24.04" \
   --debian-installer false \
-  --bootloader grub2
+  --bootloader syslinux \
+  --syslinux-theme live-build
 
 info "building ISO (this downloads packages and may take a while)"
 lb build 2>&1 | tee "$WORK_DIR/build.log" || die "lb build failed (see $WORK_DIR/build.log)"
