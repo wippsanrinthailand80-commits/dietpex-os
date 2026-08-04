@@ -102,23 +102,21 @@ disable_services() {
   info "processing ${#arr[@]} services (mask)"
 
   for svc in "${arr[@]}"; do
-    # Only touch units that actually exist.
-    if ! systemctl list-unit-files "$svc" >/dev/null 2>&1 \
-       && ! systemctl list-unit-files --state=not-found "$svc" >/dev/null 2>&1; then
+    # Skip units that do not exist at all. Anything installed - enabled or
+    # not - gets masked so it can never be (re)started.
+    if ! systemctl list-unit-files "$svc" >/dev/null 2>&1; then
       [[ $MODE_DRY_RUN -eq 0 ]] && info "  skip: $svc (not installed)"
       continue
     fi
-    if systemctl is-enabled "$svc" >/dev/null 2>&1 || [[ -e "/etc/systemd/system/${svc}" ]]; then
-      if [[ $MODE_DRY_RUN -eq 1 ]]; then
-        info "  WOULD disable/mask: $svc"
+    if [[ $MODE_DRY_RUN -eq 1 ]]; then
+      info "  WOULD disable/mask: $svc"
+    else
+      systemctl stop "$svc" >/dev/null 2>&1 || true
+      systemctl disable "$svc" >/dev/null 2>&1 || true
+      if systemctl mask "$svc" >/dev/null 2>&1; then
+        ok "disabled & masked: $svc"
       else
-        systemctl stop "$svc" >/dev/null 2>&1 || true
-        systemctl disable "$svc" >/dev/null 2>&1 || true
-        if systemctl mask "$svc" >/dev/null 2>&1; then
-          ok "disabled & masked: $svc"
-        else
-          warn "failed to mask: $svc"
-        fi
+        warn "failed to mask: $svc"
       fi
     fi
   done
