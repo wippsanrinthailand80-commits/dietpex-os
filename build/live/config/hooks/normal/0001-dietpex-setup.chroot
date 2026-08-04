@@ -50,4 +50,9 @@ update-locale LANG=en_US.UTF-8 >/dev/null 2>&1 || true
 echo "== dietpex live hook: fontconfig cache =="
 fc-cache -f >/dev/null 2>&1 || true
 
+echo "== dietpex live hook: rsvg compat for live-build =="
+# live-build calls 'rsvg' to render the boot splash, but noble's
+# librsvg2-bin only ships rsvg-convert.
+ln -sf /usr/bin/rsvg-convert /usr/bin/rsvg
+
 echo "== dietpex live hook: done =="
