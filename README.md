@@ -1,13 +1,42 @@
 # dietpex OS
 
-A trimmed-down Ubuntu — a small, opinionated post-install script that strips
-the bloat off a stock Ubuntu (or Debian-family) system so it boots faster and
-uses less RAM, disk and CPU. "dietpex" = **diet** + **p**ainless **ex**cess
-removal.
+A trimmed-down Ubuntu — a single-line installer plus a small set of scripts
+that strip the bloat off a stock Ubuntu (or Debian-family) system so it boots
+faster and uses less RAM, disk and CPU, and replaces the default UI with a
+lightweight XFCE desktop.
 
 dietpex is not a new kernel or a separate distro — it runs on top of a normal
 Ubuntu install and surgically removes the services and packages you almost
 never need on a lean workstation, server or appliance.
+
+## Install (single line)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wippsanrinthailand80-commits/dietpex-os/main/install.sh | sudo bash
+```
+
+The installer detects your environment and offers a menu:
+
+1. **Full install** — dietpex trim + XFCE UI (optionally removes GNOME)
+2. **Trim only** — disable unnecessary services, purge bloatware
+3. **Install XFCE UI only**
+4. **Set up dual-boot GRUB menu** — the "two OS" boot screen at startup
+5. **Install inside Windows (WSL2)** — real Ubuntu on Windows, no partitions
+6. **Create a bootable USB** — for a full native install with a true Linux UI
+
+Or skip the menu with flags:
+
+```bash
+sudo bash install.sh --full
+sudo bash install.sh --trim-only
+sudo bash install.sh --dual-boot
+sudo bash install.sh --windows-wsl
+sudo bash install.sh --make-usb /dev/sdb
+sudo bash install.sh --lang th     # Thai UI
+```
+
+> **Security note:** piping a script from the internet into bash is risky.
+> Review the script first, or clone the repo and run `install.sh` locally.
 
 ## What it does
 
@@ -22,92 +51,94 @@ never need on a lean workstation, server or appliance.
    - `fwupd` (firmware update daemon)
    - `udisks2`, `smartd`, `packagekit`, `rtkit` and more
 
-2. **Optionally purges bloatware** (`--purge`) with a curated list:
-   - LibreOffice, Thunderbird, games, media players, photo apps, backup tools,
-     remote-desktop clients, etc. — over 50 packages/patterns.
+2. **Optionally purges bloatware** (included in every install path):
+   LibreOffice, Thunderbird, games, media players, photo apps, backup tools,
+   remote-desktop clients — over 50 packages/patterns.
 
-3. **Cleans up** — `apt` autoremove/clean, trimmed systemd journal.
+3. **Installs a lightweight UI** — XFCE (`xfce4`, `xfce4-terminal`,
+   `xfce4-goodies`, `lightdm`), set as the default graphical session.
+   Optionally removes GNOME with `--purge-gnome`.
 
-## Requirements
+4. **Cleans up** — `apt` autoremove/clean, trimmed systemd journal.
 
-- Ubuntu 18.04+ (or another systemd-based Debian-family distro)
-- `systemd`, `apt` and `dpkg-query`
-- root access
+## Languages
 
-## Quick start
+English and Thai are built in. Language is auto-detected from the locale
+(`th_TH.UTF-8` → Thai) and can be forced with `--lang th` / `--lang en`.
+Add more languages by dropping a file in `lang/` that defines `msg()`.
 
-```bash
-# 1. Clone or copy the project
-git clone <this-repo> dietpex-os
-cd dietpex-os
+## Dual boot ("two OS")
 
-# 2. Preview what would change (safe, makes no modifications)
-sudo ./dietpex.sh --dry-run --purge
+Run `install.sh --dual-boot` (or menu option 4) inside your Ubuntu system. It
+installs `os-prober` and regenerates the GRUB menu so every OS on the machine
+appears in a "choose your OS" screen at boot. For a full second-OS install,
+create a bootable USB (option 6) and choose "Install Ubuntu alongside".
 
-# 3. Apply the trim (services only)
-sudo ./dietpex.sh
+## Windows (WSL2)
 
-# 4. Apply the full trim, including bloatware removal
-sudo ./dietpex.sh --purge
+Run `install.sh --windows-wsl` (or menu option 5) inside WSL2. It trims the
+WSL Ubuntu and installs XFCE, which renders through WSLg on Windows 11. Start
+the desktop later with `startxfce4`.
 
-# 5. Reboot
-sudo reboot
-```
+## Testing
 
-## Options
+CI runs automatically on every push (`.github/workflows/ci.yml`):
 
-| Flag | Effect |
-| --- | --- |
-| `--purge` | Also remove bloatware packages from `config/packages-remove.list` |
-| `--dry-run` | Report only; make no changes to the system |
-| `--no-clean` | Skip `apt` autoremove / cache and journal cleanup |
-| `--snap` | Keep the snap ecosystem (don't mask `snapd`) |
-| `--keep-list FILE` | Use an alternate services list |
-| `--purge-list FILE` | Use an alternate packages list |
-| `-q, --quiet` | Suppress informational output |
-| `-h, --help` | Show usage |
+- `tests/unit.sh` — pure-bash helper tests (list parsing, glob matching,
+  protected-package handling). Run locally: `bash tests/unit.sh`
+- `tests/integration.sh` — real trim in a systemd-enabled Ubuntu container:
+  verifies services are actually masked, bloat is actually purged, protected
+  packages survive, and dry-run is non-destructive.
+- `shellcheck` + `bash -n` on every script.
 
 ## Customizing
 
 Edit the lists in `config/`:
 
-- `services-disable.list` — systemd unit names to stop/disable/mask (one per
-  line, `#` for comments).
+- `services-disable.list` — systemd unit names to stop/disable/mask
 - `packages-remove.list` — packages to purge (glob patterns like
-  `libreoffice-*` are supported).
-- `packages-protect.list` — packages that must never be purged, even if listed.
+  `libreoffice-*` are supported)
+- `packages-protect.list` — packages that must never be purged
 
 ## Restoring
 
-The script does **not** make an automatic backup, but everything is reversible:
+The scripts do **not** make an automatic backup, but everything is reversible:
 
 ```bash
-# Unmask services (iterate the list manually if needed)
-sudo systemctl unmask snapd.service
-sudo systemctl enable --now snapd.service
-
-# Reinstall purged packages
-sudo apt install --reinstall <package>
+sudo systemctl unmask snapd.service      # per service, as needed
+sudo apt install --reinstall <package>   # reinstall purged packages
+sudo update-alternatives --config x-session-manager  # switch back to GNOME
 ```
 
 ## Project layout
 
 ```
 dietpex-os/
-├── dietpex.sh                  # main installer / trimmer script
+├── install.sh                  # single-line installer (menu + flags)
+├── dietpex.sh                  # core trimmer (services + purge)
+├── helpers/
+│   ├── lib.sh                  # shared library (detect, apt, i18n)
+│   ├── ui.sh                   # XFCE UI install (+ optional GNOME removal)
+│   ├── dualboot.sh             # GRUB dual-boot menu setup
+│   ├── windows-wsl.sh          # WSL2 install path
+│   └── flashdrive.sh           # bootable USB creator
+├── lang/
+│   ├── en.sh                   # English messages
+│   └── th.sh                   # Thai messages
 ├── config/
-│   ├── services-disable.list   # systemd units to disable + mask
-│   ├── packages-remove.list    # bloatware to purge (--purge)
-│   └── packages-protect.list   # never purge these
-└── README.md
+│   ├── services-disable.list
+│   ├── packages-remove.list
+│   └── packages-protect.list
+├── tests/
+│   ├── unit.sh
+│   └── integration.sh
+└── .github/workflows/ci.yml
 ```
 
 ## Safety notes
 
-- Always run `--dry-run` first on a system you care about.
-- The protected list shields core packages (`apt`, `systemd`, `linux-firmware`,
-  `ubuntu-minimal`, …) from accidental removal.
-- If a service or package isn't installed, it is skipped silently.
-- Tested targets: Ubuntu Desktop/Server. The current environment (Debian 13)
-  has no `systemd`, so full end-to-end verification must be done on a real
-  Ubuntu host.
+- Always review what will change first: `sudo ./dietpex.sh --dry-run --purge`.
+- The protected list shields core packages (`apt`, `systemd`,
+  `linux-firmware`, `ubuntu-minimal`, …) from accidental removal.
+- Missing services/packages are skipped silently.
+- CI exercises the real trim inside a disposable Ubuntu container.

@@ -40,25 +40,34 @@ QUIET=0
 
 info() { [[ $QUIET -eq 1 ]] || printf '[dietpex] %s\n' "$*"; }
 ok()    { [[ $QUIET -eq 1 ]] || printf '[dietpex] \033[32mOK\033[0m  %s\n' "$*"; }
-warn()  { [[ $QUIET -eq 1 ]] || printf '[dietpex] \033[33mWARN\033[0m %s\n' "$*" >&2; }
+warn()  { printf '[dietpex] \033[33mWARN\033[0m %s\n' "$*" >&2; }
 die()   { printf '[dietpex] \033[31mERROR\033[0m %s\n' "$*" >&2; exit 1; }
 
-# Strip comments and blank lines from a list file into a global array.
-#   load_list <file> <global_array_name>
+# Strip comments and blank lines from a list file into a caller's array.
+#   load_list <file> <array_name>
 load_list() {
-  local file="$1" array="$2" line item=()
+  local file="$1" line entry
+  local -a items=()
+  local -n list_ref="$2"
   [[ -r "$file" ]] || die "list file not readable: $file"
   while IFS= read -r line; do
     line="${line%%#*}"                    # strip inline comments
     line="${line//[[:space:]]/}"          # strip all whitespace
-    [[ -n "$line" ]] && item+=("$line")
+    [[ -n "$line" ]] && items+=("$line")
   done < "$file"
-  eval "$array=(\"\${item[@]}\")"
+  # shellcheck disable=SC2034 # nameref assignment to caller's array
+  list_ref=("${items[@]}")
 }
 
-contains() { # contains <item> <array_name>
-  local item="$1" array_name="$2" x
-  eval "for x in \"\${$array_name[@]}\"; do [[ \"\$x\" == \"\$item\" ]] && return 0; done"
+# contains <item> <array_name>
+contains() {
+  local item="$1"
+  # shellcheck disable=SC2178 # nameref target is an array
+  local -n list_ref="$2"
+  local entry
+  for entry in "${list_ref[@]}"; do
+    [[ "$entry" == "$item" ]] && return 0
+  done
   return 1
 }
 
@@ -105,9 +114,11 @@ disable_services() {
       else
         systemctl stop "$svc" >/dev/null 2>&1 || true
         systemctl disable "$svc" >/dev/null 2>&1 || true
-        systemctl mask "$svc" >/dev/null 2>&1 \
-          && ok "disabled & masked: $svc" \
-          || warn "failed to mask: $svc"
+        if systemctl mask "$svc" >/dev/null 2>&1; then
+          ok "disabled & masked: $svc"
+        else
+          warn "failed to mask: $svc"
+        fi
       fi
     fi
   done
@@ -125,6 +136,7 @@ disable_services() {
 
 purge_packages() {
   need_cmd apt-get
+  # shellcheck disable=SC2034 # 'protect' is read via the 'contains' nameref
   local pkg arr=() proto=() protect=()
   load_list "$PURGE_LIST" arr
   load_list "$PROTECT_LIST" protect
@@ -252,4 +264,10 @@ main() {
   summarize
 }
 
-main "$@"
+# Run only when invoked as a script (not when sourced, so tests can reuse the
+# helper functions).
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
+
+# vim: set ts=2 sw=2 expandtab:
