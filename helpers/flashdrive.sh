@@ -89,5 +89,8 @@ if [[ "${1:-}" == "resolve" ]]; then
   resolve_iso_url
   exit 0
 fi
+if [[ "${1:-}" == "create" ]]; then
+  shift
+fi
 
 create_bootable_usb "$@"
