@@ -54,10 +54,11 @@ pass "purge removed gnome-mines"
 
 # 5. Dry-run changes nothing and reports.
 echo "== dry run"
-before="$(systemctl is-enabled apt-daily.timer)"
+# systemctl is-enabled returns non-zero for some states, so guard the capture.
+before="$(systemctl is-enabled apt-daily.timer 2>/dev/null || true)"
 bash dietpex.sh --dry-run --purge > /tmp/dietpex3.log 2>&1 || fail "dry run failed"
 grep -q 'WOULD' /tmp/dietpex3.log || fail "dry run printed no WOULD lines"
-after="$(systemctl is-enabled apt-daily.timer)"
+after="$(systemctl is-enabled apt-daily.timer 2>/dev/null || true)"
 [[ "$before" == "$after" ]] || fail "dry run modified the system"
 pass "dry run is non-destructive"
 
