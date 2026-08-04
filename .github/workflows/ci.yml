@@ -45,3 +45,36 @@ jobs:
       # can be exercised directly without docker or third-party images.
       - name: run integration tests
         run: sudo bash tests/integration.sh
+
+  screenshots:
+    name: visual tests (screenshots)
+    runs-on: ubuntu-24.04
+    needs: integration
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install chromium + Thai fonts
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            chromium-browser fonts-noto-core libharfbuzz-bin >/dev/null
+
+      - name: run dietpex trim (setup)
+        run: sudo bash dietpex.sh --purge > /dev/null 2>&1
+
+      - name: install Thai i18n
+        run: sudo bash helpers/i18n.sh install-thai > /dev/null 2>&1
+
+      - name: install XFCE UI
+        run: sudo bash helpers/ui.sh install > /dev/null 2>&1
+
+      - name: capture screenshots
+        run: sudo bash tests/screenshot-tests.sh
+
+      - name: upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: dietpex-screenshots
+          path: tests/screenshots/*.png
+          retention-days: 30
+          if-no-files-found: warn
