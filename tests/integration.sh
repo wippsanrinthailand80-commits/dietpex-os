@@ -43,6 +43,7 @@ pass "protected package 'apt' intact"
 
 # 4. Purge actually removes a real package.
 echo "== purge removes a real package"
+DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null 2>&1 || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y gnome-mines > /dev/null 2>&1 \
   || fail "could not install gnome-mines (fixture)"
 bash dietpex.sh --purge > /tmp/dietpex2.log 2>&1 || fail "second trim failed"

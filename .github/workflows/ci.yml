@@ -35,32 +35,13 @@ jobs:
           bash install.sh --lang th --help
 
   integration:
-    name: real trim in systemd container
+    name: real trim (systemd)
     runs-on: ubuntu-24.04
     needs: unit
     steps:
       - uses: actions/checkout@v4
 
-      - name: boot systemd Ubuntu container
-        run: |
-          docker run -d --name dietpex --privileged --cgroupns=host \
-            -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
-            -v "$PWD":/dietpex:rw \
-            ubuntu:24.04 /sbin/init
-          st="starting"
-          for i in $(seq 1 90); do
-            st="$(docker exec dietpex systemctl is-system-running 2>/dev/null || true)"
-            case "$st" in
-              running|degraded) break ;;
-            esac
-            sleep 2
-          done
-          echo "systemd state: $st"
-          case "$st" in
-            running|degraded) ;;
-            *) docker logs dietpex | tail -40; exit 1 ;;
-          esac
-
+      # GitHub-hosted Ubuntu runners run systemd as PID 1, so the real trim
+      # can be exercised directly without docker or third-party images.
       - name: run integration tests
-        run: |
-          docker exec dietpex bash -c 'cd /dietpex && bash tests/integration.sh'
+        run: sudo bash tests/integration.sh
