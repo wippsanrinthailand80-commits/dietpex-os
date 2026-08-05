@@ -88,27 +88,24 @@ screendump() {
 
 # Boot sequence timings (KVM). TCG is ~4x slower, so scale the wait.
 SECONDS_STEP=20
-MAX_WAIT=$(( 6 * 60 ))
-if [[ ! -e /dev/kvm ]]; then MAX_WAIT=$(( 18 * 60 )); fi
+MAX_WAIT=$(( 8 * 60 ))
+if [[ ! -e /dev/kvm ]]; then MAX_WAIT=$(( 20 * 60 )); fi
 
 elapsed=0
 taken=0
+reached=0
 while [[ $elapsed -lt $MAX_WAIT ]]; do
   label="$(printf '%02d' "$taken")"
   screendump "$label" && taken=$(( taken + 1 ))
   sleep "$SECONDS_STEP"
   elapsed=$(( elapsed + SECONDS_STEP ))
 
-  # Stop early once the live system has fully booted (serial reaches login/
-  # X display manager or desktop target).
-  if grep -qE 'Reached target Graphical Interface|GDM|LightDM|dietpex-os login:|xfce4-session' "$WORK/serial.log" 2>/dev/null; then
-    info "graphical target reached at ${elapsed}s - capturing desktop"
-    sleep 5
-    screendump "desktop" && taken=$(( taken + 1 ))
-    # Give the XDG autostart Thai demo terminal a moment, then capture it.
-    sleep 20
-    screendump "desktop-final" && taken=$(( taken + 1 ))
-    break
+  # Once the live system has booted to the desktop, the guest app-test
+  # autostart runs Firefox -> Google -> Thai typing -> other apps. Keep
+  # capturing on a fixed cadence so every phase lands in the artifact.
+  if [[ $reached -eq 0 ]] && grep -qE 'Reached target Graphical Interface|GDM|LightDM|dietpex-os login:|xfce4-session|dietpex-apps-test' "$WORK/serial.log" 2>/dev/null; then
+    info "graphical target reached at ${elapsed}s - capturing the app-test sequence"
+    reached=1
   fi
 done
 

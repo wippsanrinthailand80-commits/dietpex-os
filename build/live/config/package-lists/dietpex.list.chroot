@@ -11,6 +11,11 @@ lightdm
 lightdm-gtk-greeter
 network-manager
 
+# --- Apps exercised by the live desktop UI test ---
+thunar
+mousepad
+xdotool
+
 # --- Thai support (fonts + vowel positioning) ---
 fonts-noto-core
 fonts-thai-tlwg

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=dietpex apps test
+Comment=Drive Firefox/Google/Thai typing and app UI test
+Exec=/usr/local/bin/dietpex-apps-test.sh
+X-GNOME-Autostart-enabled=true
