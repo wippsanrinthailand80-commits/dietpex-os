@@ -20,8 +20,13 @@ WORK="${WORK_DIR:-/tmp/dietpex-vm}"
 info() { printf '[vm] %s\n' "$*"; }
 die() { printf '[vm] ERROR: %s\n' "$*" >&2; exit 1; }
 
-[[ -f "$ISO" ]] || die "ISO not found: $ISO"
-df -h "$(dirname "$ISO")" | tail -1 | sed 's/^/[vm] disk: /'
+if [[ ! -f "$ISO" ]]; then
+  echo "[vm] ISO check failed. Directory listing of $(dirname "$ISO"):" >&2
+  ls -la "$(dirname "$ISO")" 2>&1 | head -20
+  echo "[vm] df:" >&2
+  df -h "$(dirname "$ISO")" 2>&1 | tail -3
+  die "ISO not found: $ISO"
+fi
 [[ $EUID -eq 0 ]] || die "must run as root"
 
 for cmd in qemu-system-x86_64 socat convert; do
