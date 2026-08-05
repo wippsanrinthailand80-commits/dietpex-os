@@ -10,10 +10,14 @@ set -euo pipefail
 echo "== dietpex live hook: Mozilla Firefox (real .deb) =="
 
 command -v curl >/dev/null 2>&1 || { apt-get update -qq >/dev/null; apt-get install -y -qq curl >/dev/null; }
+command -v gpg >/dev/null 2>&1 || { apt-get update -qq >/dev/null; apt-get install -y -qq gnupg >/dev/null; }
 
 install -d -m 0755 /etc/apt/keyrings
-curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg \
-  -o /etc/apt/keyrings/mozilla-archive-keyring.gpg
+# The Mozilla signing key is ASCII-armored; apt's gpgv --keyring only accepts
+# binary keyrings, so dearmor it first or apt reports NO_PUBKEY.
+curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg | \
+  gpg --batch --yes --dearmor -o /etc/apt/keyrings/mozilla-archive-keyring.gpg
+chmod 0644 /etc/apt/keyrings/mozilla-archive-keyring.gpg
 
 printf 'deb [signed-by=/etc/apt/keyrings/mozilla-archive-keyring.gpg] https://packages.mozilla.org/apt mozilla main\n' \
   > /etc/apt/sources.list.d/mozilla.list
