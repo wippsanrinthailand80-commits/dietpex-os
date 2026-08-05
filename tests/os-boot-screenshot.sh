@@ -14,6 +14,7 @@
 set -euo pipefail
 
 ISO="${1:-/tmp/dietpex-build/live-image-amd64.hybrid.iso}"
+ISO="${ISO#"${ISO%%[![:space:]]*}"}"
 OUT_DIR="${2:-tests/screenshots-os}"
 WORK="${WORK_DIR:-/tmp/dietpex-vm}"
 

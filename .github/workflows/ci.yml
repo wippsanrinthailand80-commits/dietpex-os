@@ -100,9 +100,7 @@ jobs:
           WORK_DIR: /tmp/dietpex-build
 
       - name: boot ISO in QEMU and capture desktop screenshots
-        run: sudo bash tests/os-boot-screenshot.sh \
-          ${{ github.workspace }}/dietpex-os.iso \
-          tests/screenshots-os
+        run: sudo bash tests/os-boot-screenshot.sh "${{ github.workspace }}/dietpex-os.iso" tests/screenshots-os
         env:
           WORK_DIR: /tmp/dietpex-vm
 
