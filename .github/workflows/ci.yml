@@ -101,7 +101,7 @@ jobs:
 
       - name: boot ISO in QEMU and capture desktop screenshots
         run: sudo bash tests/os-boot-screenshot.sh \
-          /tmp/dietpex-build/live-image-amd64.hybrid.iso \
+          ${{ github.workspace }}/dietpex-os.iso \
           tests/screenshots-os
         env:
           WORK_DIR: /tmp/dietpex-vm
