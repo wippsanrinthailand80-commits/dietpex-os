@@ -91,7 +91,6 @@ screendump() {
 # capture every 5s (KVM) / 10s (TCG) so the plymouth splash is not missed.
 # Once the desktop is reached, drop to 20s cadence for the app-test sequence.
 BURST_STEP=5
-TCG_BURST_STEP=10
 STEADY_STEP=20
 BURST_END_KVM=90
 BURST_END_TCG=240
