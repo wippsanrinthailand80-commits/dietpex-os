@@ -5,7 +5,9 @@
 #   1. opens Firefox (real Mozilla .deb) with a first-run-skipping profile
 #   2. loads Google with the Thai UI and types/pastes Thai into the search box
 #   3. submits the search so the results page renders Thai
-#   4. brings Thunar, Mousepad and a terminal to the front one at a time
+#   4. opens YouTube, types a Thai query into its search box and submits it
+#   5. brings Thunar, Mousepad and a terminal to the front one at a time
+#   6. dumps a RAM/disk resource report (idle footprint vs stock Ubuntu)
 #
 # The host VM script screenshots the desktop on a fixed cadence while this
 # script runs, so every phase ends up in the artifact. Progress is mirrored
@@ -136,6 +138,40 @@ xdotool key Return
 log "search submitted - holding on the Thai results page"
 sleep 20
 
+# --- YouTube: navigate Firefox there, focus its search box with the '/'
+# hotkey, type a Thai query and submit it. This proves a second major site
+# (video streaming, heavier page) renders and accepts Thai input.
+log "navigating Firefox to YouTube"
+WID=$(xdotool search --onlyvisible --class firefox 2>/dev/null | head -1 || true)
+if [[ -n "$WID" ]]; then
+  xdotool windowactivate "$WID" 2>/dev/null || true
+  setxkbmap us 2>/dev/null || true
+  xdotool key --clearmodifiers ctrl+l
+  sleep 1
+  xdotool type --delay 60 "https://www.youtube.com"
+  xdotool key Return
+  log "navigating to youtube.com - waiting for load"
+  sleep 18
+  setxkbmap us 2>/dev/null || true
+  xdotool key slash
+  sleep 2
+  log "YouTube search focused - typing Thai query"
+  setxkbmap th 2>/dev/null || true
+  sleep 1
+  if command -v xclip >/dev/null 2>&1; then
+    printf '%s' 'เพลงไทย' | xclip -selection clipboard 2>/dev/null || true
+    xdotool key --clearmodifiers ctrl+v
+  else
+    xdotool type --delay 100 'เพลงไทย' 2>/dev/null || true
+  fi
+  sleep 3
+  xdotool key Return
+  log "YouTube search submitted - holding on results"
+  sleep 20
+else
+  log "WARNING: no Firefox window for the YouTube phase"
+fi
+
 # Raise a window to the front. xfwm4's focus-stealing prevention ignores
 # xdotool's application-initiated activation, so use wmctrl (pager-source
 # _NET_ACTIVE_WINDOW, which xfwm4 honors) as the primary mechanism and keep
@@ -188,5 +224,28 @@ else
   log "WARNING: no Xfce4-terminal windows found"
 fi
 sleep 15
+
+# --- Resource report: dump memory + disk usage so the host can compare the
+# live system against stock Ubuntu Desktop figures (idle RAM, squashfs size).
+# Everything is appended to the log and pushed to the serial console.
+log "== system resources =="
+{
+  echo "== /etc/os-release =="
+  grep -E '^(PRETTY_NAME|VERSION_ID)=' /etc/os-release 2>/dev/null || true
+  echo "== free -m =="
+  free -m
+  echo "== /proc/meminfo (key lines) =="
+  grep -E '^(MemTotal|MemFree|MemAvailable|Buffers|Cached|SwapTotal|SwapFree)' /proc/meminfo 2>/dev/null || true
+  echo "== df -h =="
+  df -h
+  echo "== root filesystem =="
+  findmnt -o TARGET,FSTYPE,SIZE,USED,SOURCE / 2>/dev/null || true
+  echo "== squashfs size on the live medium =="
+  du -h /run/live/medium/live/*.squashfs 2>/dev/null || true
+  echo "== top processes by RSS (kB) =="
+  ps -eo pid,rss,comm --sort=-rss 2>/dev/null | head -8
+} >> "$LOG" 2>&1 || true
+sink_log
+sleep 5
 
 log "apps test complete"
