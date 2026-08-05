@@ -21,6 +21,7 @@ info() { printf '[vm] %s\n' "$*"; }
 die() { printf '[vm] ERROR: %s\n' "$*" >&2; exit 1; }
 
 [[ -f "$ISO" ]] || die "ISO not found: $ISO"
+df -h "$(dirname "$ISO")" | tail -1 | sed 's/^/[vm] disk: /'
 [[ $EUID -eq 0 ]] || die "must run as root"
 
 for cmd in qemu-system-x86_64 socat convert; do

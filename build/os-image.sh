@@ -52,10 +52,14 @@ lb config \
   --syslinux-theme live-build
 
 info "building ISO (this downloads packages and may take a while)"
+df -h "$WORK_DIR" | tail -1 | sed 's/^/[build] disk before build: /'
 lb build 2>&1 | tee "$WORK_DIR/build.log" || die "lb build failed (see $WORK_DIR/build.log)"
 
 iso="$(find "$WORK_DIR" -maxdepth 1 -name '*.iso' | head -1)"
 [[ -n "$iso" ]] || die "no ISO produced"
 
-cp "$iso" "$OUT_ISO"
+# Move (not copy) so we don't hold the build dir + ISO on disk at once.
+mv "$iso" "$OUT_ISO"
+[[ -f "$OUT_ISO" ]] || die "ISO missing after move: $OUT_ISO"
 info "ISO built: $OUT_ISO ($(du -h "$OUT_ISO" | cut -f1))"
+df -h "$OUT_ISO" | tail -1 | sed 's/^/[build] disk after build: /'
