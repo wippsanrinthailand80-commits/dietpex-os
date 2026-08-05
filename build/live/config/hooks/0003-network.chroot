@@ -1,0 +1,33 @@
+#!/bin/bash
+# dietpex OS - deterministic guest networking for the QEMU slirp test VM.
+#
+# The VM boots with -netdev user (slirp): the guest contract is a fixed
+# 10.0.2.0/24 network (guest .15, gateway .2, DNS .3). NetworkManager's
+# postinst fails inside the build chroot ("file: not found"), so its live
+# boot behaviour is unreliable. systemd-networkd with a static config is
+# deterministic and independent of live-config/NM state.
+
+set -euo pipefail
+
+echo "== dietpex live hook: deterministic slirp network =="
+
+cat > /etc/systemd/network/10-eth0.network <<'EOF'
+[Match]
+Type=ether
+
+[Network]
+Address=10.0.2.15/24
+Gateway=10.0.2.2
+DNS=10.0.2.3
+EOF
+
+systemctl enable systemd-networkd >/dev/null 2>&1 || true
+systemctl disable NetworkManager NetworkManager-wait-online >/dev/null 2>&1 || true
+
+printf 'nameserver 10.0.2.3\n' > /etc/resolv.conf
+
+# The app-test autostart script needs to re-heal the network as root.
+printf 'dietpex ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/dietpex-app-test
+chmod 0440 /etc/sudoers.d/dietpex-app-test
+
+echo "== slirp network configured (10.0.2.15/24) =="

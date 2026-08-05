@@ -12,6 +12,7 @@ lightdm-gtk-greeter
 network-manager
 
 # --- Apps exercised by the live desktop UI test ---
+iputils-ping
 thunar
 mousepad
 xdotool

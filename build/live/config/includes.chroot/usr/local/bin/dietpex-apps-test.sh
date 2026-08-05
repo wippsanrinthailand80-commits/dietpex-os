@@ -34,6 +34,26 @@ done
 sleep 5
 log "desktop ready"
 
+# --- Deterministic slirp networking (self-heal before launching the browser).
+# The static 10.0.2.15/24 config comes from the 0003-network hook; re-apply
+# and dump state to the serial console so the host artifact shows it.
+netdump() {
+  { echo "== network state $1 =="; ip addr show; ip route; cat /etc/resolv.conf; } >> "$LOG" 2>&1 || true
+  sudo -n cat "$LOG" > /dev/ttyS0 2>/dev/null || true
+}
+netdump "before"
+if ! ip -4 addr show | grep -q "inet "; then
+  log "no IPv4 address - restarting systemd-networkd"
+  sudo -n systemctl restart systemd-networkd 2>/dev/null || true
+  sleep 5
+fi
+if ! getent hosts google.com >/dev/null 2>&1; then
+  log "DNS failing - forcing the slirp resolver"
+  sudo -n sh -c 'echo "nameserver 10.0.2.3" > /etc/resolv.conf' 2>/dev/null || true
+  sleep 2
+fi
+netdump "after"
+
 # --- Firefox with a fresh profile that skips the welcome tab and onboarding
 # overlays, so the loaded URL is the active tab with its real title.
 PROFILE_DIR=/tmp/ffprofile
