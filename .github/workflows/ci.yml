@@ -108,7 +108,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dietpex-os-desktop
-          path: tests/screenshots-os/*.png
+          path: |
+            tests/screenshots-os/*.png
+            tests/screenshots-os/*.log
           retention-days: 30
           if-no-files-found: warn
 
