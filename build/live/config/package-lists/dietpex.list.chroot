@@ -16,6 +16,7 @@ thunar
 mousepad
 xdotool
 x11-xkb-utils
+xclip
 
 # --- Thai support (fonts + vowel positioning) ---
 fonts-noto-core
