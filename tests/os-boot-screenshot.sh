@@ -71,6 +71,10 @@ qemu-system-x86_64 "${ACCEL[@]}" \
 
 info "VM started (pid $(cat "$WORK/qemu.pid"))"
 
+sleep 3
+echo "sendkey ret" | socat - "UNIX-CONNECT:$WORK/qemu-monitor.sock" >/dev/null 2>&1 || true
+info "sent Enter to boot default menu entry"
+
 # screendump <label> - capture the current VM framebuffer to a PNG.
 screendump() {
   local label="$1"
