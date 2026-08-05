@@ -73,6 +73,12 @@ log "launching Firefox (fresh profile, Google Thai UI)"
 firefox --no-first-run -profile "$PROFILE_DIR" "https://www.google.com/webhp?hl=th" >/dev/null 2>&1 &
 log "firefox launched"
 
+# Launch the other apps up front so they exist for the raise phase below.
+thunar >/dev/null 2>&1 &
+mousepad >/dev/null 2>&1 &
+xfce4-terminal --title="dietpex apps test" >/dev/null 2>&1 &
+log "apps launched (thunar, mousepad, terminal)"
+
 # Wait for the Google window title, with a hard deadline (never --sync, which
 # would block forever if the browser fails to start).
 sleep 20
@@ -121,32 +127,41 @@ xdotool key Return
 log "search submitted - holding on the Thai results page"
 sleep 20
 
+# Raise a window class to the front with a few retries (X can be slow to map
+# freshly launched windows). Also echoes the class to the serial log.
+raise() {
+  local cls="$1" wid=""
+  for _ in $(seq 1 10); do
+    wid=$(xdotool search --onlyvisible --class "$cls" 2>/dev/null | head -1 || true)
+    [[ -n "$wid" ]] && break
+    sleep 1
+  done
+  if [[ -n "$wid" ]]; then
+    xdotool windowactivate "$wid" 2>/dev/null || true
+    xdotool windowraise "$wid" 2>/dev/null || true
+    log "raised $cls"
+  else
+    log "WARNING: no window found for class $cls"
+  fi
+}
+
 log "raising Thunar (file manager)"
-THUNAR=$(xdotool search --onlyvisible --class Thunar 2>/dev/null | head -1 || true)
-if [[ -n "$THUNAR" ]]; then
-  xdotool windowactivate "$THUNAR" 2>/dev/null || true
-fi
+raise Thunar
 sleep 20
 
 log "raising Mousepad (editor) and typing a Thai line"
-MOUSEPAD=$(xdotool search --onlyvisible --class Mousepad 2>/dev/null | head -1 || true)
-if [[ -n "$MOUSEPAD" ]]; then
-  xdotool windowactivate "$MOUSEPAD" 2>/dev/null || true
-  sleep 2
-  if command -v xclip >/dev/null 2>&1; then
-    printf '%s' 'สวัสดีจาก dietpex OS' | xclip -selection clipboard 2>/dev/null || true
-    xdotool key --clearmodifiers ctrl+v
-  else
-    xdotool type --delay 100 'สวัสดีจาก dietpex OS' 2>/dev/null || true
-  fi
+raise Mousepad
+sleep 2
+if command -v xclip >/dev/null 2>&1; then
+  printf '%s' 'สวัสดีจาก dietpex OS' | xclip -selection clipboard 2>/dev/null || true
+  xdotool key --clearmodifiers ctrl+v
+else
+  xdotool type --delay 100 'สวัสดีจาก dietpex OS' 2>/dev/null || true
 fi
 sleep 20
 
 log "raising a terminal"
-TERM=$(xdotool search --onlyvisible --class Xfce4-terminal 2>/dev/null | head -1 || true)
-if [[ -n "$TERM" ]]; then
-  xdotool windowactivate "$TERM" 2>/dev/null || true
-fi
+raise Xfce4-terminal
 sleep 15
 
 log "apps test complete"
