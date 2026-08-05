@@ -42,6 +42,19 @@ done
 sleep 5
 log "desktop ready"
 
+# --- Idle resource baseline: memory + disk before any test app is started.
+# This is the fair "idle footprint" figure to compare against stock Ubuntu
+# Desktop (GNOME idles at ~1.5-2 GB); the end-of-test dump is the peak.
+log "== idle resource baseline (before launching apps) =="
+{
+  echo "== free -m (idle) =="
+  free -m
+  grep -E '^(MemTotal|MemAvailable)' /proc/meminfo 2>/dev/null || true
+  echo "== XFCE desktop processes =="
+  ps -eo pid,rss,comm --sort=-rss 2>/dev/null | grep -Ei 'xfce|xorg|firefox|panel|thunar|mousepad|terminal' | head -10
+} >> "$LOG" 2>&1 || true
+sink_log
+
 # --- Deterministic slirp networking (self-heal before launching the browser).
 # The static 10.0.2.15/24 config comes from the 0003-network hook; re-apply
 # and dump state to the serial console so the host artifact shows it.
@@ -226,9 +239,10 @@ fi
 sleep 15
 
 # --- Resource report: dump memory + disk usage so the host can compare the
-# live system against stock Ubuntu Desktop figures (idle RAM, squashfs size).
-# Everything is appended to the log and pushed to the serial console.
-log "== system resources =="
+# live system against stock Ubuntu Desktop figures. This snapshot is taken
+# with Firefox/YouTube and all the test apps open, so it shows peak usage
+# (the idle baseline was dumped just after the desktop came up).
+log "== system resources (peak, all apps open) =="
 {
   echo "== /etc/os-release =="
   grep -E '^(PRETTY_NAME|VERSION_ID)=' /etc/os-release 2>/dev/null || true

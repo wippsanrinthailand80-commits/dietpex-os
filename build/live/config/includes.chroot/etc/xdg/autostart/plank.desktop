@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Plank
+Comment=A modern dock for the dietpex desktop
+Exec=plank
+Icon=plank
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true

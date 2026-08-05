@@ -15,6 +15,7 @@ network-manager
 arc-theme
 papirus-icon-theme
 xfce4-whiskermenu-plugin
+plank
 
 # --- Apps exercised by the live desktop UI test ---
 iputils-ping

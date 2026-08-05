@@ -16,6 +16,38 @@ if ! id -u dietpex >/dev/null 2>&1; then
 fi
 echo "dietpex:dietpex" | chpasswd
 
+echo "== dietpex live hook: plank dock config =="
+# A modern translucent dock with the key app launchers; config is written
+# here (not via includes.chroot) so the files are owned by the dietpex user.
+PLANK_HOME=/home/dietpex/.config/plank/dock1
+mkdir -p "$PLANK_HOME/launchers"
+cat > "$PLANK_HOME/settings" <<'EOF'
+[PlankDockPreferences]
+Alignment=Center
+AutoHide=false
+DockItems=firefox.dockitem;thunar.dockitem;mousepad.dockitem;terminal.dockitem;
+HideMode=None
+IconSize=40
+LockIcons=false
+Monitor=
+Position=Bottom
+ShowDockItemNames=false
+Theme=Transparent
+ZoomEnabled=true
+EOF
+mkitem() {
+  local name="$1" desktop="$2"
+  cat > "$PLANK_HOME/launchers/$name.dockitem" <<EOF
+[PlankDockItemPreferences]
+Launcher=file://$desktop
+EOF
+}
+mkitem firefox   /usr/share/applications/firefox.desktop
+mkitem thunar    /usr/share/applications/thunar.desktop
+mkitem mousepad  /usr/share/applications/org.xfce.mousepad.desktop
+mkitem terminal  /usr/share/applications/org.xfce.Terminal.desktop
+chown -R dietpex:dietpex /home/dietpex
+
 echo "== dietpex live hook: hostname =="
 echo "dietpex-os" > /etc/hostname
 sed -i 's/^127.0.1.1.*/127.0.1.1\tdietpex-os/' /etc/hosts 2>/dev/null || true
