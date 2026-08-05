@@ -87,7 +87,15 @@ screendump() {
 }
 
 # Boot sequence timings (KVM). TCG is ~4x slower, so scale the wait.
-SECONDS_STEP=20
+# During the early boot phase (isolinux → kernel → plymouth → greeter),
+# capture every 5s (KVM) / 10s (TCG) so the plymouth splash is not missed.
+# Once the desktop is reached, drop to 20s cadence for the app-test sequence.
+BURST_STEP=5
+TCG_BURST_STEP=10
+STEADY_STEP=20
+BURST_END_KVM=90
+BURST_END_TCG=240
+SECONDS_STEP=$BURST_STEP
 MAX_WAIT=$(( 8 * 60 ))
 if [[ ! -e /dev/kvm ]]; then MAX_WAIT=$(( 20 * 60 )); fi
 
@@ -95,6 +103,11 @@ elapsed=0
 taken=0
 reached=0
 while [[ $elapsed -lt $MAX_WAIT ]]; do
+  # Switch to steady cadence once the burst window is over.
+  if [[ ! -e /dev/kvm && $elapsed -ge $BURST_END_TCG ]] || \
+     [[   -e /dev/kvm && $elapsed -ge $BURST_END_KVM ]]; then
+    SECONDS_STEP=$STEADY_STEP
+  fi
   label="$(printf '%02d' "$taken")"
   screendump "$label" && taken=$(( taken + 1 ))
   sleep "$SECONDS_STEP"

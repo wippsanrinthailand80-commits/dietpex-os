@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+echo "== dietpex plymouth hook: setting dietpex-dots theme =="
+
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+  plymouth-set-default-theme dietpex-dots
+fi
+
+echo "bochs" >> /etc/initramfs-tools/modules
+
+if command -v update-initramfs >/dev/null 2>&1; then
+  update-initramfs -u -k all
+fi
+
+exit 0

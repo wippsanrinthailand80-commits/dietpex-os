@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=DietPEX Dots
+Description=DietPEX logo assembled dot-by-dot in a serpentine weave
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/dietpex-dots
+ScriptFile=/usr/share/plymouth/themes/dietpex-dots/dietpex-dots.script

@@ -17,6 +17,10 @@ papirus-icon-theme
 xfce4-whiskermenu-plugin
 plank
 
+# --- Boot splash: plymouth runs the 'dietpex-dots' theme (logo assembled
+# --- dot-by-dot in a serpentine weave) while the live system boots.
+plymouth
+
 # --- Apps exercised by the live desktop UI test ---
 iputils-ping
 wmctrl
