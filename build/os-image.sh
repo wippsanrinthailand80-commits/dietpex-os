@@ -42,7 +42,7 @@ lb config \
   --binary-images iso-hybrid \
   --mode ubuntu \
   --archive-areas "main restricted universe multiverse" \
-  --bootappend-live "boot=live config quiet splash" \
+  --bootappend-live "boot=live config quiet splash console=tty0 console=ttyS0,115200n8" \
   --linux-flavours generic \
   --initramfs live-boot \
   --initsystem systemd \

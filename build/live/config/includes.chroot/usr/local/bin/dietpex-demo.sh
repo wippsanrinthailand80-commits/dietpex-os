@@ -1,15 +1,19 @@
 #!/bin/bash
 # dietpex OS - demo shown on the live desktop via XDG autostart.
 # Proves Thai text renders correctly in a real GUI session.
-set -euo pipefail
+set -uo pipefail
+
+LOG=/home/dietpex/dietpex-demo.log
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || LOG=/tmp/dietpex-demo.log
+echo "dietpex-demo.sh started at $(date)" >> "$LOG" 2>/dev/null || true
 
 while true; do
-  clear
+  clear 2>/dev/null || true
   printf '\033[36m\033[1m'
   echo "  ____  _            __   ____  ____  _____  ____"
-  echo " |  _ \| |_   _  ___ \ \ / / _ \| __ )| ____|  _ \"
+  echo " |  _ \| |_   _  ___ \ \ / / _ \| __ )| ____|  _ "
   echo " | | | | | | | |/ _ \ \ V / | | |  _ \|  _| | |_) |"
-  echo " | |_| | | |_| |  __/ | | | |_| | |_) | |___|  __/"
+  echo " | |_| | | |_| |  __/ | | | | |_| | |_) | |___|  __/"
   echo " |____/|_|\__,_|\___|  |_| \___/|____/|_____|_|"
   printf '\033[0m'
   echo
@@ -24,9 +28,10 @@ while true; do
   echo "คำประสม:  เดี๋ยว นึก คิดถึง รู้สึก"
   echo "──────────────────────────────────────────────"
   echo
-  printf 'fc-match ":lang=th" -> %s\n' "$(fc-match ':lang=th' 2>/dev/null)"
-  printf 'Locale: %s\n' "$(locale 2>/dev/null | grep LANG | head -1)"
+  printf 'fc-match ":lang=th" -> %s\n' "$(fc-match ':lang=th' 2>/dev/null || echo 'FAILED')"
+  printf 'Locale: %s\n' "$(locale 2>/dev/null | grep LANG | head -1 || echo 'FAILED')"
   echo
   echo "การทดสอบนี้แสดงผลบนเดสก์ท็อปจริง (This renders on the real desktop)"
+  echo "demo frame drawn at $(date)" >> "$LOG" 2>/dev/null || true
   sleep 60
 done

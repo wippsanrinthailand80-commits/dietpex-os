@@ -101,12 +101,12 @@ while [[ $elapsed -lt $MAX_WAIT ]]; do
 
   # Stop early once the live system has fully booted (serial reaches login/
   # X display manager or desktop target).
-  if grep -qE 'Reached target Graphical Interface|GDM|LightDM|dietpex-os login:' "$WORK/serial.log" 2>/dev/null; then
+  if grep -qE 'Reached target Graphical Interface|GDM|LightDM|dietpex-os login:|xfce4-session' "$WORK/serial.log" 2>/dev/null; then
     info "graphical target reached at ${elapsed}s - capturing desktop"
-    sleep 10
+    sleep 5
     screendump "desktop" && taken=$(( taken + 1 ))
-    # Give the Thai demo terminal a moment, then capture the final desktop.
-    sleep 10
+    # Give the XDG autostart Thai demo terminal a moment, then capture it.
+    sleep 20
     screendump "desktop-final" && taken=$(( taken + 1 ))
     break
   fi
@@ -121,6 +121,13 @@ if [[ -S "$WORK/qemu-monitor.sock" ]]; then
 fi
 sleep 2
 if [[ -f "$WORK/qemu.pid" ]]; then kill "$(cat "$WORK/qemu.pid")" 2>/dev/null || true; fi
+
+# Ship the guest serial log with the screenshots so boot/autostart issues are
+# diagnosable from the artifact alone.
+if [[ -f "$WORK/serial.log" ]]; then
+  cp "$WORK/serial.log" "$OUT_DIR/serial.log" 2>/dev/null || true
+  info "serial log copied to $OUT_DIR/serial.log"
+fi
 
 echo
 info "============================================="
