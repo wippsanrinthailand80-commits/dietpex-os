@@ -51,8 +51,32 @@ echo "== dietpex live hook: fontconfig cache =="
 fc-cache -f >/dev/null 2>&1 || true
 
 echo "== dietpex live hook: rsvg compat for live-build =="
-# live-build calls 'rsvg' to render the boot splash, but noble's
-# librsvg2-bin only ships rsvg-convert.
-ln -sf /usr/bin/rsvg-convert /usr/bin/rsvg
+# live-build calls the legacy 'rsvg' CLI (e.g. 'rsvg --format png --height
+# 480 --width 640 in.svg out.png'), but noble's librsvg2-bin only ships
+# rsvg-convert, which takes a different argument syntax. Provide a small
+# wrapper that translates the old invocation.
+cat > /usr/bin/rsvg <<'EOF'
+#!/bin/bash
+WIDTH=""
+HEIGHT=""
+FMT="png"
+INPUT=""
+OUTPUT=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --width) WIDTH="$2"; shift 2 ;;
+    --height) HEIGHT="$2"; shift 2 ;;
+    --format) FMT="$2"; shift 2 ;;
+    -*) shift ;;
+    *) [[ -z "$INPUT" ]] && INPUT="$1" || OUTPUT="$1"; shift ;;
+  esac
+done
+ARGS=()
+[[ -n "$WIDTH" ]] && ARGS+=(-w "$WIDTH")
+[[ -n "$HEIGHT" ]] && ARGS+=(-h "$HEIGHT")
+[[ -n "$OUTPUT" ]] && ARGS+=(-o "$OUTPUT")
+exec /usr/bin/rsvg-convert "${ARGS[@]}" "$INPUT"
+EOF
+chmod +x /usr/bin/rsvg
 
 echo "== dietpex live hook: done =="
