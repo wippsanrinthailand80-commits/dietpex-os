@@ -11,6 +11,10 @@ lightdm
 lightdm-gtk-greeter
 network-manager
 
+# --- UI theme (dark, modern look instead of the bland stock GTK) ---
+arc-theme
+papirus-icon-theme
+
 # --- Apps exercised by the live desktop UI test ---
 iputils-ping
 wmctrl

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=dietpex theme
+Comment=Apply the branded wallpaper in the live session
+Exec=/usr/local/bin/dietpex-theme.sh
+X-GNOME-Autostart-enabled=true
