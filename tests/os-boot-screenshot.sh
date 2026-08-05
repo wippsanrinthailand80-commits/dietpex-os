@@ -22,7 +22,7 @@ die() { printf '[vm] ERROR: %s\n' "$*" >&2; exit 1; }
 
 if [[ ! -f "$ISO" ]]; then
   echo "[vm] ISO check failed. Directory listing of $(dirname "$ISO"):" >&2
-  ls -la "$(dirname "$ISO")" 2>&1 | head -20
+  find "$(dirname "$ISO")" -maxdepth 1 -printf '%M %s %p\n' 2>&1 | head -20
   echo "[vm] df:" >&2
   df -h "$(dirname "$ISO")" 2>&1 | tail -3
   die "ISO not found: $ISO"
