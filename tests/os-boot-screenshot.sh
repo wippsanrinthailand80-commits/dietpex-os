@@ -129,6 +129,10 @@ if [[ -f "$WORK/serial.log" ]]; then
   info "serial log copied to $OUT_DIR/serial.log"
 fi
 
+# The upload-artifact action runs as the non-root runner user, so every file
+# must be world-readable (QEMU's serial file is created 0600 by default).
+chmod -R a+rX "$OUT_DIR" 2>/dev/null || true
+
 echo
 info "============================================="
 info " Screenshots captured: $taken"
