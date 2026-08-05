@@ -39,13 +39,21 @@ log "launching Firefox"
 firefox --no-first-run "https://www.google.com/webhp?hl=th" >/dev/null 2>&1 &
 log "firefox launched"
 
-sleep 18
-WID=$(xdotool search --sync --onlyvisible --name 'Google' 2>/dev/null | head -1 || true)
+# Poll for the Google window with a hard deadline instead of xdotool --sync,
+# which would block forever if the browser fails to open.
+sleep 20
+WID=""
+for _ in $(seq 1 12); do
+  WID=$(xdotool search --onlyvisible --name 'Google' 2>/dev/null | head -1 || true)
+  [[ -n "$WID" ]] && break
+  sleep 3
+done
+
 if [[ -n "$WID" ]]; then
-  xdotool windowactivate --sync "$WID" 2>/dev/null || true
+  xdotool windowactivate "$WID" 2>/dev/null || true
   log "focused Firefox window"
 else
-  log "WARNING: Firefox window not found"
+  log "WARNING: Firefox window not found after poll - continuing"
 fi
 
 sleep 2

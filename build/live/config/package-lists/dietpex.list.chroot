@@ -15,6 +15,7 @@ network-manager
 thunar
 mousepad
 xdotool
+x11-xkb-utils
 
 # --- Thai support (fonts + vowel positioning) ---
 fonts-noto-core

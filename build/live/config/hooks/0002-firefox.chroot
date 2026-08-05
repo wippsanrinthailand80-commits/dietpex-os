@@ -22,7 +22,14 @@ chmod 0644 /etc/apt/keyrings/mozilla-archive-keyring.gpg
 printf 'deb [signed-by=/etc/apt/keyrings/mozilla-archive-keyring.gpg] https://packages.mozilla.org/apt mozilla main\n' \
   > /etc/apt/sources.list.d/mozilla.list
 
+# Ubuntu's firefox is a snap-transitional stub versioned 1:1snap1-0ubuntu5
+# (epoch 1). Mozilla's real deb has NO epoch (152.x~build1), so a plain
+# version comparison always lets Ubuntu's stub win. Pin the Mozilla archive at
+# priority 1001 so the real browser is selected regardless of epoch.
+printf 'Package: firefox*\nPin: origin packages.mozilla.org\nPin-Priority: 1001\n' \
+  > /etc/apt/preferences.d/99mozilla-firefox
+
 apt-get update -qq
 apt-get install -y -qq firefox
 
-echo "== firefox installed: $(firefox --version 2>&1 | head -1) =="
+echo "== firefox installed: $(dpkg-query -W -f='${Version} (${Maintainer})' firefox 2>/dev/null) =="
