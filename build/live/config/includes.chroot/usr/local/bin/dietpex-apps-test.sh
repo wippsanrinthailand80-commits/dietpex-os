@@ -107,7 +107,10 @@ else
     sleep 1
     xdotool type --delay 80 "https://www.google.com/webhp?hl=th"
     xdotool key Return
-    sleep 10
+    # Give slirp time to render the Google homepage (which autofocuses its
+    # search box) so the Thai paste below lands in the search box, not the
+    # still-focused address bar.
+    sleep 25
   else
     log "WARNING: no Firefox window at all - typing will go nowhere useful"
   fi
@@ -174,7 +177,16 @@ fi
 sleep 20
 
 log "raising the app-test terminal"
-raise --name "apps test"
+# The app-test terminal is the last-mapped Xfce4-terminal (higher XID); the
+# first one is the fullscreen demo terminal, which we leave alone.
+TWID=$(xdotool search --onlyvisible --class Xfce4-terminal 2>/dev/null | tail -1 || true)
+if [[ -n "$TWID" ]]; then
+  wmctrl -i -a "$TWID" 2>/dev/null || true
+  xdotool windowactivate "$TWID" 2>/dev/null || true
+  log "raised app-test terminal"
+else
+  log "WARNING: no Xfce4-terminal windows found"
+fi
 sleep 15
 
 log "apps test complete"
