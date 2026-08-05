@@ -18,10 +18,16 @@ export DISPLAY="${DISPLAY:-:0}"
 LOG=/home/dietpex/dietpex-apps-test.log
 echo "dietpex-apps-test started at $(date)" > "$LOG" 2>/dev/null || true
 
+# Dump the whole log to the serial console on exit (as root; the redirect must
+# happen inside sudo or the unprivileged user can't open /dev/ttyS0).
+sink_log() {
+  sudo -n sh -c "cat '$LOG' > /dev/ttyS0" 2>/dev/null || true
+}
+trap sink_log EXIT
+
 log() {
   local msg="$*"
   echo "[$(date +%T)] $msg" >> "$LOG" 2>/dev/null || true
-  echo "[apps-test] $msg" > /dev/ttyS0 2>/dev/null || true
 }
 
 log "waiting for the XFCE panel"
@@ -39,7 +45,7 @@ log "desktop ready"
 # and dump state to the serial console so the host artifact shows it.
 netdump() {
   { echo "== network state $1 =="; ip addr show; ip route; cat /etc/resolv.conf; } >> "$LOG" 2>&1 || true
-  sudo -n cat "$LOG" > /dev/ttyS0 2>/dev/null || true
+  sink_log
 }
 netdump "before"
 if ! ip -4 addr show | grep -q "inet "; then
@@ -127,30 +133,37 @@ xdotool key Return
 log "search submitted - holding on the Thai results page"
 sleep 20
 
-# Raise a window class to the front with a few retries (X can be slow to map
-# freshly launched windows). Also echoes the class to the serial log.
+# Raise a window to the front. xfwm4's focus-stealing prevention ignores
+# xdotool's application-initiated activation, so use wmctrl (pager-source
+# _NET_ACTIVE_WINDOW, which xfwm4 honors) as the primary mechanism and keep
+# xdotool as a fallback. Search expression is e.g. "--class Thunar".
 raise() {
-  local cls="$1" wid=""
+  local arg="$*" wid="" cmd
+  xfconf-query -c xfwm4 -p /general/focus_new_windows -s off 2>/dev/null || true
   for _ in $(seq 1 10); do
-    wid=$(xdotool search --onlyvisible --class "$cls" 2>/dev/null | head -1 || true)
+    wid=$(xdotool search --onlyvisible $arg 2>/dev/null | head -1 || true)
     [[ -n "$wid" ]] && break
     sleep 1
   done
   if [[ -n "$wid" ]]; then
+    if command -v wmctrl >/dev/null 2>&1; then
+      wmctrl -i -a "$wid" 2>/dev/null || true
+    fi
     xdotool windowactivate "$wid" 2>/dev/null || true
     xdotool windowraise "$wid" 2>/dev/null || true
-    log "raised $cls"
+    xdotool windowfocus "$wid" 2>/dev/null || true
+    log "raised $wid"
   else
-    log "WARNING: no window found for class $cls"
+    log "WARNING: no window found for $arg"
   fi
 }
 
 log "raising Thunar (file manager)"
-raise Thunar
+raise --class Thunar
 sleep 20
 
 log "raising Mousepad (editor) and typing a Thai line"
-raise Mousepad
+raise --class Mousepad
 sleep 2
 if command -v xclip >/dev/null 2>&1; then
   printf '%s' 'สวัสดีจาก dietpex OS' | xclip -selection clipboard 2>/dev/null || true
@@ -160,8 +173,8 @@ else
 fi
 sleep 20
 
-log "raising a terminal"
-raise Xfce4-terminal
+log "raising the app-test terminal"
+raise --name "apps test"
 sleep 15
 
 log "apps test complete"
