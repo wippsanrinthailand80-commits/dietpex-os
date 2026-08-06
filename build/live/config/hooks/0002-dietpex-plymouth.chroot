@@ -3,11 +3,20 @@ set -e
 
 echo "== dietpex plymouth hook: setting dietpex-dots theme =="
 
+# Mark the theme as default (writes /etc/plymouth/plymouthd.conf).
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then
   plymouth-set-default-theme dietpex-dots
 fi
 
-echo "bochs" >> /etc/initramfs-tools/modules
+# Make sure Plymouth's renderer finds a framebuffer in the initramfs.
+# QEMU -vga std exposes its framebuffer through the bochs-drm KMS driver;
+# list every plausible name + the DRM helper stack so *one* of them lands
+# in the initrd regardless of the exact module filename for this kernel.
+ramfs_modules="/etc/initramfs-tools/modules"
+mkdir -p "$(dirname "$ramfs_modules")"
+for mod in drm drm_kms_helper syscopyarea sysfillrect sysimgblt bochs bochs-drm i2c-algo-bit; do
+  grep -qxF "$mod" "$ramfs_modules" 2>/dev/null || echo "$mod" >> "$ramfs_modules"
+done
 
 if command -v update-initramfs >/dev/null 2>&1; then
   update-initramfs -u -k all
