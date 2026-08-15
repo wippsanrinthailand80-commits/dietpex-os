@@ -86,7 +86,6 @@ bash dietpex.sh --purge > /tmp/browser-purge.log 2>&1 || {
 }
 
 # --- 5. Verify browsers were removed ---
-all_removed=true
 for pkg in firefox chromium-browser; do
   if dpkg-query -W -f='${Status}\n' "$pkg" 2>/dev/null | grep -q 'install ok installed'; then
     fail "$pkg still installed after purge"
