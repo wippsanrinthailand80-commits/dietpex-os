@@ -145,7 +145,7 @@ echo " dietpex RAM Benchmark Results"
 echo "============================================"
 printf "%-30s %10s %10s %8s\n" "APP" "RSS(kB)" "VSZ(kB)" "CPU(%)"
 printf "%-30s %10s %10s %8s\n" "----" "-------" "-------" "---"
-sort -t$'\t' -k2 -rn "$RESULTS" | tail -n +2 | while IFS=$'\t' read -r app rss vsz cpu; do
+tail -n +2 "$RESULTS" | sort -t$'\t' -k2 -rn | while IFS=$'\t' read -r app rss vsz cpu; do
   printf "%-30s %10s %10s %8s\n" "$app" "$rss" "$vsz" "$cpu"
 done
 
@@ -158,7 +158,7 @@ MD_FILE="$OUTPUT_DIR/ram-benchmark-results.md"
   echo ""
   echo "| App | RSS (kB) | VSZ (kB) | CPU (%) |"
   echo "|-----|---------|---------|---------|"
-  sort -t$'\t' -k2 -rn "$RESULTS" | tail -n +2 | while IFS=$'\t' read -r app rss vsz cpu; do
+  tail -n +2 "$RESULTS" | sort -t$'\t' -k2 -rn | while IFS=$'\t' read -r app rss vsz cpu; do
     echo "| $app | $rss | $vsz | $cpu |"
   done
 } > "$MD_FILE"
