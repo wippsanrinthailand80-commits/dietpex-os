@@ -46,6 +46,22 @@ jobs:
       - name: run integration tests
         run: sudo bash tests/integration.sh
 
+  browser-purge:
+    name: browser purge verification
+    runs-on: ubuntu-24.04
+    needs: integration
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install browser test packages
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            firefox chromium-browser google-chrome-stable >/dev/null 2>&1 || true
+
+      - name: run browser purge test
+        run: sudo bash tests/browser-purge-test.sh
+
   screenshots:
     name: visual tests (screenshots)
     runs-on: ubuntu-24.04
@@ -76,6 +92,34 @@ jobs:
         with:
           name: dietpex-screenshots
           path: tests/screenshots/*.png
+          retention-days: 30
+          if-no-files-found: warn
+
+  ram-benchmark:
+    name: XFCE app RAM benchmark
+    runs-on: ubuntu-24.04
+    needs: screenshots
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install Xorg + XFCE + screenshot tools
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            xserver-xorg-video-dummy xfce4 xfce4-goodies \
+            xvfb scrot gnome-screenshot libharfbuzz-bin >/dev/null 2>&1
+
+      - name: run RAM benchmark
+        run: sudo bash tests/ram-benchmark.sh
+
+      - name: upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: dietpex-ram-benchmark
+          path: |
+            tests/screenshots/ram-benchmark-results.tsv
+            tests/screenshots/ram-benchmark-results.md
+            tests/screenshots/ram-benchmark/
           retention-days: 30
           if-no-files-found: warn
 
