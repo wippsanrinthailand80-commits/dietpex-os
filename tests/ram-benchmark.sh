@@ -68,7 +68,6 @@ APPS=(
   "xfce4-mount|xfce4-mount"
   "xfce4-netload|xfce4-netload"
   "xfce4-notes|xfce4-notes"
-  "xfce4-power|xfce4-power-manager"
   "xfce4-quicklauncher|xfce4-quicklauncher"
   "xfce4-systemblog|xfce4-systemblog"
   "xfce4-time|xfce4-time"
