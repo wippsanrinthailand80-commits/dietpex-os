@@ -35,7 +35,7 @@ libreoffice-*
 libreoffice
 
 # --- Mail / PIM ---
-thunderbird
+thunderbird*
 
 # --- Media players ---
 rhythmbox
@@ -47,6 +47,11 @@ cheese
 shotwell
 simple-scan
 gnome-photos
+gnome-video-effects
+
+# --- Media codecs ---
+gstreamer*
+ffmpeg*
 
 # --- Remote desktop / network tools ---
 remmina
@@ -65,6 +70,50 @@ gnome-software-plugin-snap
 # --- Photo / GIMP ---
 gimp
 
+# --- Printing & scanning ---
+cups
+cups-browsed
+cups-client
+cups-common
+printer-driver*
+sane*
+xsane
+hplip
+hplip-gui
+
+# --- Bluetooth & radio peripherals ---
+bluetooth
+blueman
+pulseaudio-module-bluetooth
+
+# --- Modem & mobile broadband ---
+modemmanager
+mobile-broadband-provider-*
+
+# --- Network discovery & sharing ---
+avahi-daemon
+avahi-utils
+libnss-mdns
+cifs-utils
+samba*
+netbios*
+nfs-common
+rpcbind
+
+# --- System updates & notifications ---
+unattended-upgrades
+apt-listchanges
+friendly-recovery
+popularity-contest
+update-notifier*
+
+# --- Cloud / identity & policy ---
+realmd
+sssd*
+packagekit*
+fwupd*
+landscape-client*
+
 # --- Misc desktop helpers ---
 gnome-calendar
 gnome-contacts
@@ -76,3 +125,28 @@ gnome-disk-utility
 gnome-characters
 gnome-sound-recorder
 usb-creator-gtk
+
+# --- Documentation & help ---
+manpages-*-dev
+ubuntu-docs
+yelp*
+gnome-help*
+
+# --- Firewall GUI ---
+gufw
+ufw
+
+# --- Evolution mail suite ---
+evolution*
+
+# --- Dev tools (often pre-installed on desktop) ---
+# python3-*  -- uncomment the next line if you want Python dev stripped
+# python3-*
+# ruby*      -- uncomment if Ruby is not needed
+# ruby*
+# perl*      -- uncomment if Perl is not needed
+# perl*
+# nodejs*    -- uncomment if Node.js is not needed
+# nodejs*
+# npm        -- uncomment if npm is not needed
+# npm
