@@ -70,6 +70,25 @@ gnome-software-plugin-snap
 # --- Photo / GIMP ---
 gimp
 
+# --- Browsers (optional - keep only one) ---
+firefox
+firefox-locale-*
+firefox-addons-*
+chromium-browser
+chromium-browser-l10n
+google-chrome-stable
+google-chrome
+microsoft-edge-stable
+microsoft-edge
+opera
+opera-stable
+brave-browser
+brave-keyring
+vivaldi-stable
+min
+midori
+epiphany-browser
+
 # --- Printing & scanning ---
 cups
 cups-browsed
