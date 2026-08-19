@@ -193,6 +193,27 @@ purge_packages() {
   fi
 }
 
+# ------------------------------------------------------------ baseline snapshot
+
+# save_baseline - record package + masked-service counts before trimming so
+# dietpex-report can show before/after savings. Non-destructive; only writes a
+# small file under /var/lib/dietpex. Skipped on dry runs.
+save_baseline() {
+  [[ $MODE_DRY_RUN -eq 1 ]] && return 0
+  local dir="/var/lib/dietpex"
+  mkdir -p "$dir" 2>/dev/null || return 0
+  local count size masked
+  count="$(dpkg-query -W -f='${Package}\n' 2>/dev/null | wc -l)"
+  size="$(dpkg-query -W -f='${Installed-Size}\n' 2>/dev/null | awk '{s+=$1} END{print s+0}')"
+  masked="$(systemctl list-unit-files --state=masked --no-legend --no-pager 2>/dev/null | wc -l)"
+  {
+    echo "# dietpex OS baseline snapshot (taken before trim)"
+    echo "DIETPEX_BASELINE_PKG_COUNT=$count"
+    echo "DIETPEX_BASELINE_PKG_SIZE_KB=$size"
+    echo "DIETPEX_BASELINE_MASKED=$masked"
+  } > "$dir/baseline" 2>/dev/null || true
+}
+
 # ------------------------------------------------------------------ cleanup
 
 cleanup() {
@@ -253,6 +274,12 @@ main() {
 
   if [[ $MODE_DRY_RUN -eq 1 ]]; then
     warn "dry run enabled - reporting only"
+  fi
+
+  # Capture the baseline before changing anything so dietpex-report can show
+  # the savings afterwards.
+  if [[ $MODE_DRY_RUN -eq 0 ]]; then
+    save_baseline
   fi
 
   if [[ $MODE_SKIP_SERVICES -eq 0 ]]; then

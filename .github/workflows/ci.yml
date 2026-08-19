@@ -34,6 +34,9 @@ jobs:
           bash install.sh --help
           bash install.sh --lang th --help
 
+      - name: report tool smoke (read-only)
+        run: bash helpers/report.sh
+
   integration:
     name: real trim (systemd)
     runs-on: ubuntu-24.04

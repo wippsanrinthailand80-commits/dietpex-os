@@ -101,6 +101,7 @@ run_full() {
   info "$(msg trim_started)"
   bash "$SCRIPT_DIR/dietpex.sh" --purge
   ok "$(msg trim_done)"
+  install_report_tool
   info "$(msg complete)"
 }
 
@@ -109,6 +110,7 @@ run_trim() {
   info "$(msg trim_started)"
   bash "$SCRIPT_DIR/dietpex.sh" --purge
   ok "$(msg trim_done)"
+  install_report_tool
 }
 
 run_ui() {
@@ -139,6 +141,22 @@ run_usb() {
   bash "$HELPERS_DIR/flashdrive.sh" create "$DEVICE"
 }
 
+# Install the read-only resource-report tool into the system.
+install_report_tool() {
+  if [[ -f "$HELPERS_DIR/report.sh" ]]; then
+    install -m 0755 "$HELPERS_DIR/report.sh" /usr/local/bin/dietpex-report \
+      && ok "$(msg report_installed)" || warn "could not install dietpex-report"
+  fi
+}
+
+run_report() {
+  if [[ -x /usr/local/bin/dietpex-report ]]; then
+    /usr/local/bin/dietpex-report
+  else
+    bash "$HELPERS_DIR/report.sh"
+  fi
+}
+
 # ---------------------------------------------------------------------- menu
 
 run_menu() {
@@ -162,18 +180,20 @@ run_menu() {
     printf '  %s\n' "$(msg opt_windows)"
     printf '  %s\n' "$(msg opt_usb)"
     printf '  %s\n' "$(msg opt_thai)"
+    printf '  %s\n' "$(msg opt_report)"
     printf '  %s\n' "$(msg opt_quit)"
     printf '%s' "$(msg enter_choice)"
     read -r choice || exit 0
     case "$choice" in
-      1) run_full; return 0;;
-      2) run_trim; return 0;;
-      3) run_ui; return 0;;
-      4) run_dualboot; return 0;;
-      5) run_windows; return 0;;
-      6) printf '%s' "$(msg usb_confirm_device)"; read -r d; DEVICE="$d"; run_usb; return 0;;
-      7) run_thai; return 0;;
-      0) return 0;;
+       1) run_full; return 0;;
+       2) run_trim; return 0;;
+       3) run_ui; return 0;;
+       4) run_dualboot; return 0;;
+       5) run_windows; return 0;;
+       6) printf '%s' "$(msg usb_confirm_device)"; read -r d; DEVICE="$d"; run_usb; return 0;;
+       7) run_thai; return 0;;
+       8) run_report; return 0;;
+       0) return 0;;
       *) warn "$(msg invalid_choice)";;
     esac
   done

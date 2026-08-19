@@ -20,6 +20,8 @@ msg() {
     opt_windows)           printf '%s\n' "5) ติดตั้งภายใน Windows (WSL2)";;
     opt_usb)               printf '%s\n' "6) สร้าง USB สำหรับติดตั้งจาก ISO ของ Ubuntu";;
     opt_thai)              printf '%s\n' "7) ติดตั้งฟอนต์ภาษาไทย + การรองรับภาษา";;
+    opt_report)            printf '%s\n' "8) แสดงรายงานทรัพยากรระบบ";;
+    report_installed)      printf '%s\n' "ติดตั้งเครื่องมือรายงานแล้ว: dietpex-report";;
     opt_quit)              printf '%s\n' "0) ออกจากโปรแกรม";;
     enter_choice)          printf '%s\n' "ป้อนตัวเลือก: ";;
     invalid_choice)        printf '%s\n' "ตัวเลือกไม่ถูกต้อง";;
