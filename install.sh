@@ -144,8 +144,11 @@ run_usb() {
 # Install the read-only resource-report tool into the system.
 install_report_tool() {
   if [[ -f "$HELPERS_DIR/report.sh" ]]; then
-    install -m 0755 "$HELPERS_DIR/report.sh" /usr/local/bin/dietpex-report \
-      && ok "$(msg report_installed)" || warn "could not install dietpex-report"
+    if install -m 0755 "$HELPERS_DIR/report.sh" /usr/local/bin/dietpex-report; then
+      ok "$(msg report_installed)"
+    else
+      warn "could not install dietpex-report"
+    fi
   fi
 }
 
